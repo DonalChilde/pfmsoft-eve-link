@@ -56,8 +56,11 @@ OrdersDict = dict[TypeId, DividedOrders]  # type_id -> DividedOrders
 
 class MarketOrdersResponse(TypedDict):
     region_id: int
-    timestamp: int
+    """The region ID for which the market orders were fetched."""
+    timestamp_iso: str
+    """The timestamp when the market orders were fetched."""
     orders: OrdersDict
+    """The market orders divided by type ID and buy/sell orders."""
 
 
 @app.command()
@@ -144,7 +147,7 @@ def _generate_default_filename(
 ) -> str:
     """Generates a default filename for the market orders response based on the region ID and timestamp."""
     region_id = cast(int, esi_request.path_parameters["region_id"])
-    timestamp = esi_response.response.metadata.received_at.timestamp()
+    timestamp = esi_response.response.metadata.received_at.timestamp_nanos()
     return f"market_orders_{region_id}_{timestamp}.json"
 
 
@@ -165,7 +168,7 @@ def _process_response(
             orders_by_type[type_id]["sell_orders"].append(order)
     return {
         "region_id": region_id,
-        "timestamp": esi_response.response.metadata.received_at.timestamp(),
+        "timestamp_iso": esi_response.response.metadata.received_at.format_iso(),
         "orders": orders_by_type,
     }
 
