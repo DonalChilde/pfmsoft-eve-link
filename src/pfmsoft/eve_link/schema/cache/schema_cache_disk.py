@@ -85,6 +85,7 @@ class SchemaCacheManager:
 
     def _load_compatibility_dates(self) -> None:
         """Load and cache the list of compatibility dates from disk."""
+        self._cache_directory.mkdir(parents=True, exist_ok=True)
         if self._compatibility_dates_path().exists():
             self._compatibility_dates = TimestampedCompatibilityDates.deserialize(
                 self._compatibility_dates_path().read_text(encoding="utf-8")
