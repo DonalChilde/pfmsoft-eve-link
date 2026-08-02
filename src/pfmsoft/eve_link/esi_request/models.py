@@ -167,22 +167,16 @@ class RuntimeEsiRequest:
 
 @dataclass(slots=True, kw_only=True, frozen=True)
 class EsiResponse:
+    esi_request: EsiRequest
+    """The request that generated this response."""
     esi_runtime_request: RuntimeEsiRequest
     """The request that generated this response."""
     response: Response
     """The response associated with this EsiResponse."""
 
-    def _purge_secrets(self) -> None:
-        """Purge the access tokens from this response."""
-        self.esi_runtime_request.purge_access_token()
-        # FIXME: will be in next api-request release.
-        # self.response.purge_secrets()
-
     def serialize(self, indent: int | None = None) -> str:
         """Serialize the EsiResponse."""
-        response_copy = deepcopy(self)
-        response_copy._purge_secrets()
-        return EsiResponseRoot(root=response_copy).model_dump_json(indent=indent)
+        return EsiResponseRoot(root=self).model_dump_json(indent=indent)
 
 
 EsiResponseRoot = RootModel[EsiResponse]
@@ -190,22 +184,16 @@ EsiResponseRoot = RootModel[EsiResponse]
 
 @dataclass(slots=True, kw_only=True, frozen=True)
 class FailedEsiResponse:
+    esi_request: EsiRequest
+    """The request that generated this failed response."""
     esi_runtime_request: RuntimeEsiRequest
     """The request that generated this failed response."""
     failed_response: FailedResponse
     """The failed response associated with this FailedEsiResponse."""
 
-    def _purge_secrets(self) -> None:
-        """Purge the access tokens from this response."""
-        self.esi_runtime_request.purge_access_token()
-        # FIXME: will be in next api-request release.
-        # self.failed_response.purge_secrets()
-
     def serialize(self, indent: int | None = None) -> str:
         """Serialize the FailedEsiResponse."""
-        response_copy = deepcopy(self)
-        response_copy._purge_secrets()
-        return FailedEsiResponseRoot(root=response_copy).model_dump_json(indent=indent)
+        return FailedEsiResponseRoot(root=self).model_dump_json(indent=indent)
 
 
 FailedEsiResponseRoot = RootModel[FailedEsiResponse]
@@ -215,17 +203,17 @@ FailedEsiResponseRoot = RootModel[FailedEsiResponse]
 # as the UUID could be generated on deserialization. These would be converted to
 # EsiRequestGroup objects for runtime execution. This is not currently used, but is
 # left here for future consideration.
-@dataclass(slots=True, kw_only=True)
-class EsiRequestList:
-    name: str | None = None
-    """The name of this list of runtime ESI requests."""
-    description: str | None = None
-    """An optional description of this list of runtime ESI requests."""
-    requests: list[EsiRequest] = field(default_factory=list[EsiRequest])
-    """The list of ESI requests."""
+# @dataclass(slots=True, kw_only=True)
+# class EsiRequestList:
+#     name: str | None = None
+#     """The name of this list of runtime ESI requests."""
+#     description: str | None = None
+#     """An optional description of this list of runtime ESI requests."""
+#     requests: list[EsiRequest] = field(default_factory=list[EsiRequest])
+#     """The list of ESI requests."""
 
 
-EsiRequestListRoot = RootModel[EsiRequestList]
+# EsiRequestListRoot = RootModel[EsiRequestList]
 
 
 @dataclass(slots=True, kw_only=True)
@@ -241,43 +229,57 @@ class EsiRequestGroup:
 EsiRequestGroupRoot = RootModel[EsiRequestGroup]
 
 
-@dataclass(slots=True, kw_only=True)
-class EsiResponseList(EsiRequestList):
-    successful_responses: dict[UUID, EsiResponse] = field(
-        default_factory=dict[UUID, EsiResponse]
-    )
-    """The dict of successful ESI responses."""
-    failed_responses: dict[UUID, FailedEsiResponse] = field(
-        default_factory=dict[UUID, FailedEsiResponse]
-    )
-    """The dict of failed ESI responses."""
+# @dataclass(slots=True, kw_only=True)
+# class EsiResponseList(EsiRequestList):
+#     successful_responses: dict[UUID, EsiResponse] = field(
+#         default_factory=dict[UUID, EsiResponse]
+#     )
+#     """The dict of successful ESI responses."""
+#     failed_responses: dict[UUID, FailedEsiResponse] = field(
+#         default_factory=dict[UUID, FailedEsiResponse]
+#     )
+#     """The dict of failed ESI responses."""
 
-    def purge_tokens(self) -> None:
-        """Purge the access tokens from all successful and failed ESI responses."""
-        for response in self.successful_responses.values():
-            response.esi_runtime_request.purge_access_token()
-        for failed_response in self.failed_responses.values():
-            failed_response.esi_runtime_request.purge_access_token()
+#     def purge_tokens(self) -> None:
+#         """Purge the access tokens from all successful and failed ESI responses."""
+#         for response in self.successful_responses.values():
+#             response.esi_runtime_request.purge_access_token()
+#         for failed_response in self.failed_responses.values():
+#             failed_response.esi_runtime_request.purge_access_token()
 
 
-EsiResponseListRoot = RootModel[EsiResponseList]
+# EsiResponseListRoot = RootModel[EsiResponseList]
 
 
 # FIXME rethink the response models, and whether to include the request. and if so, how to.
 # FIXME make the way this is handled the same with single responses and response groups. The request is not needed for the response, but it is useful for debugging and logging. It is also useful for serialization and deserialization, as it allows the request to be reconstructed from the response. However, it is not needed for the response itself, and it may be better to separate the request from the response in the future.
 # Maybe make a separate model? EsiResponseSingle?
-@dataclass(slots=True, kw_only=True)
-class ResolvedRequest:
-    request: EsiRequest
-    """The request that generated this response."""
-    response: EsiResponse | FailedEsiResponse
-    """The response associated with this EsiResponseSingle."""
+# @dataclass(slots=True, kw_only=True)
+# class ResolvedRequest:
+#     request: EsiRequest
+#     """The request that generated this response."""
+#     response: EsiResponse | FailedEsiResponse
+#     """The response associated with this EsiResponseSingle."""
+
+
+# @dataclass(slots=True, kw_only=True)
+# class ResolvedRequestGroup:
+#     successful_requests: dict[UUID, EsiResponse] = field(
+#         default_factory=dict[UUID, EsiResponse]
+#     )
+#     """The dict of successful ESI requests and responses in this group."""
+#     failed_requests: dict[UUID, FailedEsiResponse] = field(
+#         default_factory=dict[UUID, FailedEsiResponse]
+#     )
+#     """The dict of failed ESI requests and responses in this group."""
 
 
 @dataclass(slots=True, kw_only=True)
-class EsiResponseGroup(EsiRequestGroup):
-    # FIXME: make the request group a field.
-    # request_group: EsiRequestGroup
+class EsiResponseGroup:
+    name: str | None = None
+    """The name of this group of runtime ESI responses."""
+    description: str | None = None
+    """An optional description of this group of runtime ESI responses."""
     successful_responses: dict[UUID, EsiResponse] = field(
         default_factory=dict[UUID, EsiResponse]
     )
