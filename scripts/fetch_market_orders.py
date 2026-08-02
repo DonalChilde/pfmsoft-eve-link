@@ -18,6 +18,7 @@ from uuid import uuid4
 import typer
 from pfmsoft.eve_snippets import json_io, save_text_file
 from pfmsoft.eve_snippets.httpx2.http_session_factory import client_manager
+from whenever import Instant
 
 from pfmsoft.eve_link import EsiRequest, make_request
 from pfmsoft.eve_link.esi_request.models import EsiResponse, FailedEsiResponse
@@ -59,6 +60,8 @@ class MarketOrdersResponse(TypedDict):
     """The region ID for which the market orders were fetched."""
     timestamp_iso: str
     """The timestamp when the market orders were fetched."""
+    expires_at: str | None
+    """The timestamp when the market orders will expire, if provided by the ESI response."""
     orders: OrdersDict
     """The market orders divided by type ID and buy/sell orders."""
 
@@ -166,9 +169,16 @@ def _process_response(
             orders_by_type[type_id]["buy_orders"].append(order)
         else:
             orders_by_type[type_id]["sell_orders"].append(order)
+    timestamp_iso = esi_response.response.metadata.received_at.format_iso()
+    expires_at = (
+        Instant.from_timestamp(esi_response.response.metadata.expires_at).format_iso()
+        if esi_response.response.metadata.expires_at
+        else None
+    )
     return {
         "region_id": region_id,
-        "timestamp_iso": esi_response.response.metadata.received_at.format_iso(),
+        "timestamp_iso": timestamp_iso,
+        "expires_at": expires_at,
         "orders": orders_by_type,
     }
 

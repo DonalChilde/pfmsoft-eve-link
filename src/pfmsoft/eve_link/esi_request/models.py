@@ -263,8 +263,21 @@ class EsiResponseList(EsiRequestList):
 EsiResponseListRoot = RootModel[EsiResponseList]
 
 
+# FIXME rethink the response models, and whether to include the request. and if so, how to.
+# FIXME make the way this is handled the same with single responses and response groups. The request is not needed for the response, but it is useful for debugging and logging. It is also useful for serialization and deserialization, as it allows the request to be reconstructed from the response. However, it is not needed for the response itself, and it may be better to separate the request from the response in the future.
+# Maybe make a separate model? EsiResponseSingle?
+@dataclass(slots=True, kw_only=True)
+class ResolvedRequest:
+    request: EsiRequest
+    """The request that generated this response."""
+    response: EsiResponse | FailedEsiResponse
+    """The response associated with this EsiResponseSingle."""
+
+
 @dataclass(slots=True, kw_only=True)
 class EsiResponseGroup(EsiRequestGroup):
+    # FIXME: make the request group a field.
+    # request_group: EsiRequestGroup
     successful_responses: dict[UUID, EsiResponse] = field(
         default_factory=dict[UUID, EsiResponse]
     )
