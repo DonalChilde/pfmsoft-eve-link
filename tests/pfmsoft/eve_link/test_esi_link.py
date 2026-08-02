@@ -224,7 +224,7 @@ def test_required_access_token_is_optional_and_attached_when_present() -> None:
     runtime_request = _make_runtime_request(request_id=uuid4())
     public_request = EsiRequest(operation_id="GetStatus")
 
-    asyncio.run(link._check_required_access_token(public_request, runtime_request))
+    asyncio.run(link._attach_access_token_if_required(public_request, runtime_request))
     assert runtime_request.access_token is None
 
     credential_id = uuid4()
@@ -235,7 +235,7 @@ def test_required_access_token_is_optional_and_attached_when_present() -> None:
     )
     link.auth_manager = _FakeAuthManager(access_token="attached-token")
 
-    asyncio.run(link._check_required_access_token(auth_request, runtime_request))
+    asyncio.run(link._attach_access_token_if_required(auth_request, runtime_request))
 
     assert runtime_request.access_token == "attached-token"
     assert link.auth_manager.character_calls == [(credential_id, 42)]
@@ -254,7 +254,7 @@ def test_required_access_token_rejects_incomplete_authorization_tuple() -> None:
 
     with pytest.raises(ValueError, match="Credential ID and Character ID"):
         asyncio.run(
-            link._check_required_access_token(inconsistent_request, runtime_request)
+            link._attach_access_token_if_required(inconsistent_request, runtime_request)
         )
 
 

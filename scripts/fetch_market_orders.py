@@ -135,31 +135,29 @@ def main(
 
 
 def _check_failed_response(
-    esi_request: EsiRequest, esi_response: EsiResponse | FailedEsiResponse
+    esi_response: EsiResponse | FailedEsiResponse,
 ) -> EsiResponse:
     if isinstance(esi_response, FailedEsiResponse):
         typer.echo(
-            f"Failed to fetch market orders for region {esi_request.path_parameters['region_id']}: {esi_response.failed_response.error_messages}"
+            f"Failed to fetch market orders for region "
+            f"{esi_response.esi_request.path_parameters['region_id']}: "
+            f"{esi_response.failed_response.error_messages}"
         )
         raise typer.Exit(code=1)
     return esi_response
 
 
-def _generate_default_filename(
-    esi_request: EsiRequest, esi_response: EsiResponse
-) -> str:
+def _generate_default_filename(esi_response: EsiResponse) -> str:
     """Generates a default filename for the market orders response based on the region ID and timestamp."""
-    region_id = cast(int, esi_request.path_parameters["region_id"])
+    region_id = cast(int, esi_response.esi_request.path_parameters["region_id"])
     timestamp = esi_response.response.metadata.received_at.timestamp_nanos()
     return f"market_orders_{region_id}_{timestamp}.json"
 
 
-def _process_response(
-    esi_request: EsiRequest, esi_response: EsiResponse
-) -> MarketOrdersResponse:
+def _process_response(esi_response: EsiResponse) -> MarketOrdersResponse:
     """Processes the ESI response and returns a structured MarketOrdersResponse."""
     orders_by_type: dict[int, DividedOrders] = {}
-    region_id = cast(int, esi_request.path_parameters["region_id"])
+    region_id = cast(int, esi_response.esi_request.path_parameters["region_id"])
 
     for order in esi_response.response.json:
         type_id = order["type_id"]
@@ -199,15 +197,11 @@ def _process_request(
     response = asyncio.run(
         make_request(request=esi_request, settings=settings, schema=esi_schema)
     )
-    response = _check_failed_response(esi_request=esi_request, esi_response=response)
-    processed_response = _process_response(
-        esi_request=esi_request, esi_response=response
-    )
+    response = _check_failed_response(esi_response=response)
+    processed_response = _process_response(esi_response=response)
     if output_directory != Path("-"):
         if filename is None:
-            filename = _generate_default_filename(
-                esi_request=esi_request, esi_response=response
-            )
+            filename = _generate_default_filename(esi_response=response)
         try:
             output_path = save_text_file(
                 text=json_io.json_dumps(processed_response, indent=indent),

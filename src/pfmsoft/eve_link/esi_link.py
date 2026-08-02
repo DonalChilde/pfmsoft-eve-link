@@ -142,7 +142,7 @@ class EsiLink:
             raise ValueError(f"Operation ID '{operation_id}' not found in ESI schema.")
         return operation
 
-    async def _check_required_access_token(
+    async def _attach_access_token_if_required(
         self,
         esi_request: EsiRequest,
         runtime_esi_request: RuntimeEsiRequest,
@@ -193,7 +193,7 @@ class EsiLink:
         for _, request in esi_requests.requests.items():
             self.validate_request(request, schema)
             runtime_request = build_runtime_esi_request(request, schema)
-            await self._check_required_access_token(request, runtime_request)
+            await self._attach_access_token_if_required(request, runtime_request)
             runtime_requests[runtime_request.request_key] = runtime_request
 
         request_objects = {

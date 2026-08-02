@@ -13,6 +13,7 @@ from uuid import UUID, uuid4, uuid5
 from pfmsoft.api_request import Response
 from pfmsoft.api_request.request.models import FailedResponse
 from pydantic import RootModel
+from whenever import Instant
 
 
 class UserSettableHeaders(StrEnum):
@@ -180,6 +181,18 @@ class EsiResponse:
 
 
 EsiResponseRoot = RootModel[EsiResponse]
+
+
+@dataclass(slots=True, kw_only=True)
+class SimplifiedEsiResponse:
+    esi_request: EsiRequest
+    """The request that generated this response."""
+    response_data: Any
+    """The response data associated with this SimplifiedEsiResponse."""
+    received_at_instant: Instant
+    """The instant at which the response was received."""
+    expires_at_instant: Instant | None
+    """The instant at which the response expires, if any."""
 
 
 @dataclass(slots=True, kw_only=True, frozen=True)
