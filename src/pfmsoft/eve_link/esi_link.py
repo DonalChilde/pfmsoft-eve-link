@@ -6,6 +6,7 @@ batch HTTP execution, and response shaping.
 """
 
 import logging
+from copy import deepcopy
 from pathlib import Path
 from types import TracebackType
 from typing import Self
@@ -231,24 +232,32 @@ def _make_esi_response_group(
     requests: EsiRequestGroup,
     runtime_requests: dict[UUID, RuntimeEsiRequest],
 ) -> EsiResponseGroup:
-    """Convert api_request response groups into EsiResponseGroup containers."""
+    """Convert api_request response groups into EsiResponseGroup containers.
+
+    Collects successful and failed responses, purges access tokens from runtime requests,
+    and constructs EsiResponse and FailedEsiResponse objects.
+    """
     successful_responses: dict[UUID, EsiResponse] = {}
     failed_responses: dict[UUID, FailedEsiResponse] = {}
     for request_id, response in responses.successful.items():
         runtime_request = runtime_requests[request_id]
+        runtime_request.purge_access_token()
         successful_responses[request_id] = EsiResponse(
-            esi_runtime_request=runtime_request, response=response
+            esi_request=requests.requests[request_id],
+            esi_runtime_request=runtime_request,
+            response=response,
         )
     for request_id, response in responses.failed.items():
         runtime_request = runtime_requests[request_id]
+        runtime_request.purge_access_token()
         failed_responses[request_id] = FailedEsiResponse(
+            esi_request=deepcopy(requests.requests[request_id]),
             esi_runtime_request=runtime_request,
             failed_response=response,
         )
     return EsiResponseGroup(
         name=requests.name,
         description=requests.description,
-        requests=requests.requests,
         successful_responses=successful_responses,
         failed_responses=failed_responses,
     )
