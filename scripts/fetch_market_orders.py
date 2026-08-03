@@ -24,14 +24,11 @@ from uuid import uuid4
 
 import typer
 from pfmsoft.eve_snippets import json_io, save_text_file
-from pfmsoft.eve_snippets.httpx2.http_session_factory import client_manager
 from whenever import Instant
 
-from pfmsoft.eve_link import EsiRequest, make_request
+from pfmsoft.eve_link import EsiRequest, SimpleRequests
 from pfmsoft.eve_link.esi_request.models import EsiResponse, FailedEsiResponse
-from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
-from pfmsoft.eve_link.schema.models import EsiSchema
-from pfmsoft.eve_link.settings import USER_AGENT, EsiLinkSettings, get_settings
+from pfmsoft.eve_link.settings import get_settings
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -200,9 +197,10 @@ def _process_request(
 ) -> None:
     """Processes the ESI request and returns the response."""
     settings = get_settings()
-    esi_schema = _get_schema(settings)
+    simple_requests = SimpleRequests(settings=settings)
+    esi_schema = simple_requests.get_schema()
     response = asyncio.run(
-        make_request(request=esi_request, settings=settings, schema=esi_schema)
+        simple_requests.make_request(request=esi_request, schema=esi_schema)
     )
     response = _check_failed_response(esi_response=response)
     processed_response = _process_response(esi_response=response)
@@ -225,20 +223,6 @@ def _process_request(
         typer.echo(f"Response saved to {output_path}")
         raise typer.Exit()
     print(json_io.json_dumps(processed_response, indent=indent))
-
-
-def _get_schema(settings: EsiLinkSettings) -> EsiSchema:
-    """Fetches the latest ESI schema from the EsiLink schema cache."""
-    schema_manager = SchemaCacheManager(cache_directory=settings.schema_cache_directory)
-    with client_manager(USER_AGENT) as session:
-        schema_manager.fetch_updates(session=session)
-    esi_schema = schema_manager.latest_schema()
-    if esi_schema is None:
-        typer.echo(
-            f"Failed to fetch the latest schema. Please update your schema cache and try again."
-        )
-        raise typer.Exit(code=1)
-    return esi_schema
 
 
 if __name__ == "__main__":
