@@ -4,9 +4,16 @@
 #     "pfmsoft-eve-link>=0.4.1",
 #     "typer>=0.26.8",
 # ]
+# [tool.uv.sources]
+# pfmsoft-eve-link = { git = "https://github.com/DonalChilde/pfmsoft-eve-link.git", branch = "dev" }
 # ///
 
+####################################################################################################
 # run with `uv run <script>`
+# Add this to the script config header to use the dev branch of pfmsoft-eve-link:
+# [tool.uv.sources]
+# pfmsoft-eve-link = { git = "https://github.com/DonalChilde/pfmsoft-eve-link.git", branch = "dev" }
+####################################################################################################
 
 """This script fetches market orders for a given region ID from the EVE Online API and saves them to a file or prints them to stdout."""
 
@@ -70,7 +77,7 @@ class MarketOrdersResponse(TypedDict):
 def main(
     region_id: Annotated[
         int,
-        typer.Option("--region_id", help="The region ID to fetch market orders for"),
+        typer.Option("--region-id", help="The region ID to fetch market orders for"),
     ],
     output_directory: Annotated[
         Path,
