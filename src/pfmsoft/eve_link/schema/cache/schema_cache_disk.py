@@ -203,26 +203,32 @@ class SchemaCacheManager:
             ),
         )
 
-    def latest_entry(self) -> SchemaCacheEntry | None:
+    def latest_entry(self) -> SchemaCacheEntry:
         """Return the latest cached schema entry by compatibility date.
 
         Returns:
-            The latest SchemaCacheEntry or None if no entries exist.
+            The latest SchemaCacheEntry.
+
+        Raises:
+            ValueError: If no cached schema entries exist.
         """
         entries = self.list_entries()
         if not entries:
-            return None
+            raise ValueError(
+                "No cached schema entries found. Please fetch and cache schemas first."
+            )
         return max(entries, key=lambda entry: entry.compatibility_date)
 
-    def latest_schema(self) -> EsiSchema | None:
+    def latest_schema(self) -> EsiSchema:
         """Return the latest cached schema by compatibility date.
 
         Returns:
-            The latest EsiSchema or None if no entries exist.
+            The latest EsiSchema.
+
+        Raises:
+            ValueError: If no cached schema entries exist.
         """
         latest_entry = self.latest_entry()
-        if latest_entry is None:
-            return None
         return self.load(compatibility_date=latest_entry.compatibility_date)
 
     def clear_date(self, *, compatibility_date: str) -> int:

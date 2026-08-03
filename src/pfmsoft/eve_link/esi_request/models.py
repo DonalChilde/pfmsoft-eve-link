@@ -4,7 +4,6 @@ These models define serialization and token-redaction boundaries for request and
 response payloads used by both CLI and library code.
 """
 
-from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -188,11 +187,18 @@ class SimplifiedEsiResponse:
     esi_request: EsiRequest
     """The request that generated this response."""
     response_data: Any
-    """The response data associated with this SimplifiedEsiResponse."""
+    """The JSON response data associated with this SimplifiedEsiResponse."""
     received_at_instant: Instant
     """The instant at which the response was received."""
     expires_at_instant: Instant | None
     """The instant at which the response expires, if any."""
+
+    def serialize(self, indent: int | None = None) -> str:
+        """Serialize the SimplifiedEsiResponse."""
+        return SimplifiedEsiResponseRoot(root=self).model_dump_json(indent=indent)
+
+
+SimplifiedEsiResponseRoot = RootModel[SimplifiedEsiResponse]
 
 
 @dataclass(slots=True, kw_only=True, frozen=True)
@@ -302,18 +308,16 @@ class EsiResponseGroup:
     )
     """The dict of failed ESI responses in this group."""
 
-    def _purge_secrets(self) -> None:
-        """Purge the access tokens from all successful and failed ESI responses in this group."""
-        for response in self.successful_responses.values():
-            response._purge_secrets()  # type: ignore
-        for failed_response in self.failed_responses.values():
-            failed_response._purge_secrets()  # type: ignore
+    # def _purge_secrets(self) -> None:
+    #     """Purge the access tokens from all successful and failed ESI responses in this group."""
+    #     for response in self.successful_responses.values():
+    #         response._purge_secrets()  # type: ignore
+    #     for failed_response in self.failed_responses.values():
+    #         failed_response._purge_secrets()  # type: ignore
 
     def serialize(self, indent: int | None = None) -> str:
         """Purge secrets and serialize the EsiResponseGroup to a JSON string."""
-        copied_object = deepcopy(self)
-        copied_object._purge_secrets()
-        return EsiResponseGroupRoot(root=copied_object).model_dump_json(indent=indent)
+        return EsiResponseGroupRoot(root=self).model_dump_json(indent=indent)
 
 
 EsiResponseGroupRoot = RootModel[EsiResponseGroup]
