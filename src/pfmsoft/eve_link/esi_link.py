@@ -17,6 +17,7 @@ from pfmsoft.api_request.cache import SqliteCacheFactory
 from pfmsoft.api_request.rate_limit import AiolimiterRateLimiterFactory
 from pfmsoft.api_request.request.models import Responses
 from pfmsoft.eve_auth_manager.sqlite.manager import SqliteAuthManager
+from pfmsoft.eve_snippets.httpx2.http_session_factory import client_manager
 
 from pfmsoft.eve_link.esi_request.models import (
     EsiRequest,
@@ -31,8 +32,9 @@ from pfmsoft.eve_link.esi_request.validate import (
     EsiRequestValidationErrors,
     validate_esi_request,
 )
+from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
 from pfmsoft.eve_link.schema.models import EsiSchema, SchemaOperation
-from pfmsoft.eve_link.settings import EsiLinkSettings
+from pfmsoft.eve_link.settings import USER_AGENT, EsiLinkSettings
 
 logger = logging.getLogger(__name__)
 
@@ -286,83 +288,251 @@ def _make_request_from_runtime_request(
     )
 
 
-async def make_request(
-    request: EsiRequest, schema: EsiSchema, settings: EsiLinkSettings
-) -> EsiResponse | FailedEsiResponse:
-    """Validate, execute, and return a single ESI request response.
+# # FIXME Move the following functions to a separate utility module for script-specific logic.
+# # This will make the proper usage more clear, as they are all convenience functions for
+# # one-off requests, eg. scripts and cli commands.
+# async def make_request(
+#     request: EsiRequest, schema: EsiSchema, settings: EsiLinkSettings
+# ) -> EsiResponse | FailedEsiResponse:
+#     """Validate, execute, and return a single ESI request response.
 
-    This function wraps the EsiLink class to provide a simple interface for executing
-    a single ESI request. It creates a temporary EsiLink instance, validates the request
-    against the provided schema, and executes it. The response is returned as either
-    an EsiResponse or a FailedEsiResponse, depending on the outcome of the request.
+#     This function wraps the EsiLink class to provide a simple interface for executing
+#     a single ESI request. It creates a temporary EsiLink instance, validates the request
+#     against the provided schema, and executes it. The response is returned as either
+#     an EsiResponse or a FailedEsiResponse, depending on the outcome of the request.
 
-    When used in situations where multiple requests need to be executed, consider using
-    the EsiLink class directly to avoid the overhead of creating and closing multiple
-    instances.
+#     When used in situations where multiple requests need to be executed, consider using
+#     the EsiLink class directly to avoid the overhead of creating and closing multiple
+#     instances.
 
-    Args:
-        request: The ESI request to execute.
-        schema: The ESI schema for validation.
-        settings: The ESI link settings.
+#     Args:
+#         request: The ESI request to execute.
+#         schema: The ESI schema for validation.
+#         settings: The ESI link settings.
 
-    Returns:
-        EsiResponse if the request is successful, otherwise FailedEsiResponse.
-    """
-    request_group = EsiRequestGroup(
-        name="single_request_group",
-        description="A group containing a single ESI request.",
-        requests={request.request_id: request},
-    )
-    response_group = await make_requests(request_group, schema, settings)
-    if request.request_id in response_group.failed_responses:
-        return response_group.failed_responses[request.request_id]
-    elif request.request_id in response_group.successful_responses:
-        return response_group.successful_responses[request.request_id]
-    else:
-        raise RuntimeError(
-            f"Response for request ID {request.request_id} not found in response group."
+#     Returns:
+#         EsiResponse if the request is successful, otherwise FailedEsiResponse.
+#     """
+#     request_group = EsiRequestGroup(
+#         name="single_request_group",
+#         description="A group containing a single ESI request.",
+#         requests={request.request_id: request},
+#     )
+#     response_group = await make_requests(request_group, schema, settings)
+#     if request.request_id in response_group.failed_responses:
+#         return response_group.failed_responses[request.request_id]
+#     elif request.request_id in response_group.successful_responses:
+#         return response_group.successful_responses[request.request_id]
+#     else:
+#         raise RuntimeError(
+#             f"Response for request ID {request.request_id} not found in response group."
+#         )
+
+
+# async def make_requests(
+#     requests: EsiRequestGroup, schema: EsiSchema, settings: EsiLinkSettings
+# ) -> EsiResponseGroup:
+#     """Validate, execute, and return a group of ESI request responses.
+
+#     This function wraps the EsiLink class to provide a simple interface for executing
+#     a group of ESI requests. It creates a temporary EsiLink instance, validates the
+#     requests against the provided schema, and executes them. The responses are returned
+#     as an EsiResponseGroup, containing both successful and failed responses.
+
+#     When used in situations where multiple requests need to be executed, consider using
+#     the EsiLink class directly to avoid the overhead of creating and closing multiple
+#     instances.
+
+#     Args:
+#         requests: The group of ESI requests to execute.
+#         schema: The ESI schema for validation.
+#         settings: The ESI link settings.
+
+#     Returns:
+#         EsiResponseGroup: The group of ESI request responses.
+#     """
+#     async with esi_link_factory(settings) as esi_link:
+#         response_group = await esi_link.make_requests(requests, schema)
+#         return response_group
+
+
+# def esi_link_factory(settings: EsiLinkSettings) -> EsiLink:
+#     """Factory function to create an instance of EsiLink.
+
+#     Args:
+#         settings (EsiLinkSettings): The application settings.
+
+#     Returns:
+#         EsiLink: An instance of the EsiLink class.
+#     """
+#     return EsiLink(
+#         auth_manager_db_path=settings.auth_manager_db_file,
+#         web_cache_path=settings.api_request_cache_file,
+#         max_rate=settings.max_rate,
+#         time_period=settings.time_period,
+#     )
+
+
+# def get_schema(
+#     settings: EsiLinkSettings, compatibility_date: str | None = None
+# ) -> EsiSchema:
+#     """Fetches the latest ESI schema from the EsiLink schema cache.
+
+#     This function retrieves the ESI schema from the local cache managed by the
+#     SchemaCacheManager. If a compatibility date is provided, it fetches the schema
+#     corresponding to that date; otherwise, it retrieves the latest available schema.
+
+#     It is suitable for one-off scripts or commands. When executing multiple requests,
+#     consider using SchemaCacheManager directly to avoid repeated cache lookups.
+
+#     Args:
+#         settings: The EsiLink application settings.
+#         compatibility_date: Optional compatibility date in YYYY-MM-DD format. If not provided, the latest schema is fetched.
+
+#     Returns:
+#         The EsiSchema object for the specified compatibility date or the latest schema if no date is provided.
+
+#     Raises:
+#         ValueError: If no cached schema entries exist.
+#     """
+#     schema_manager = SchemaCacheManager(cache_directory=settings.schema_cache_directory)
+#     with client_manager(USER_AGENT) as session:
+#         schema_manager.fetch_updates(session=session)
+#     if compatibility_date is not None:
+#         esi_schema = schema_manager.load(compatibility_date=compatibility_date)
+#     else:
+#         esi_schema = schema_manager.latest_schema()
+#     return esi_schema
+
+
+class SimpleRequests:
+    def __init__(self, settings: EsiLinkSettings) -> None:
+        """A simple wrapper for executing ESI requests with schema validation.
+
+        The only state saved by this class is the EsiLinkSettings object, which is used
+        to configure the EsiLink instance and schema cache manager. While the factory
+        functions for creating EsiLink and SchemaCacheManager instances are useful for
+        all situations, the other functions are intended for one-off scripts or commands
+        that need to execute a single request or a small batch of requests without
+        managing the EsiLink context directly.
+
+        Longer lived applications that execute multiple requests should use the
+        SchemaCacheManager and EsiLink class directly, as it is more efficient to keep
+        the EsiLink instance open and reuse it for multiple requests.
+        """
+        self.settings = settings
+
+    def get_schema(self, compatibility_date: str | None = None) -> EsiSchema:
+        """Fetches an ESI schema from the EsiLink schema cache.
+
+        This function retrieves the ESI schema from the local cache managed by the
+        SchemaCacheManager. If a compatibility date is provided, it fetches the schema
+        corresponding to that date; otherwise, it retrieves the latest available schema.
+
+        This function will check for new schema updates from the ESI schema repository
+        once per downtime before returning the schema.
+
+        It is suitable for one-off scripts or commands. When executing multiple requests,
+        consider using SchemaCacheManager directly to avoid repeated cache lookups.
+
+        Args:
+            compatibility_date: Optional compatibility date in YYYY-MM-DD format.
+                If not provided, the latest schema is fetched.
+
+        Returns:
+            The EsiSchema object for the specified compatibility date or the latest
+                schema if no date is provided.
+
+        Raises:
+            ValueError: If no cached schema entries exist.
+        """
+        schema_manager = self.schema_cache_manager_factory()
+        with client_manager(USER_AGENT) as session:
+            schema_manager.fetch_updates(session=session)
+        if compatibility_date is not None:
+            esi_schema = schema_manager.load(compatibility_date=compatibility_date)
+        else:
+            esi_schema = schema_manager.latest_schema()
+        return esi_schema
+
+    def schema_cache_manager_factory(self) -> SchemaCacheManager:
+        """Factory function to create an instance of SchemaCacheManager from settings.
+
+        Returns:
+            SchemaCacheManager: An instance of the SchemaCacheManager class.
+        """
+        return SchemaCacheManager(cache_directory=self.settings.schema_cache_directory)
+
+    def esi_link_factory(self) -> EsiLink:
+        """Factory function to create an instance of EsiLink from settings.
+
+        Returns:
+            EsiLink: An instance of the EsiLink class.
+        """
+        return EsiLink(
+            auth_manager_db_path=self.settings.auth_manager_db_file,
+            web_cache_path=self.settings.api_request_cache_file,
+            max_rate=self.settings.max_rate,
+            time_period=self.settings.time_period,
         )
 
+    async def make_request(
+        self, request: EsiRequest, schema: EsiSchema
+    ) -> EsiResponse | FailedEsiResponse:
+        """Validate, execute, and return a single ESI request response.
 
-async def make_requests(
-    requests: EsiRequestGroup, schema: EsiSchema, settings: EsiLinkSettings
-) -> EsiResponseGroup:
-    """Validate, execute, and return a group of ESI request responses.
+        This function wraps the EsiLink class to provide a simple interface for executing
+        a single ESI request. It creates a temporary EsiLink instance, validates the request
+        against the provided schema, and executes it. The response is returned as either
+        an EsiResponse or a FailedEsiResponse, depending on the outcome of the request.
 
-    This function wraps the EsiLink class to provide a simple interface for executing
-    a group of ESI requests. It creates a temporary EsiLink instance, validates the
-    requests against the provided schema, and executes them. The responses are returned
-    as an EsiResponseGroup, containing both successful and failed responses.
+        When used in situations where multiple requests need to be executed, consider using
+        the EsiLink class directly to avoid the overhead of creating and closing multiple
+        instances with their associated resources.
 
-    When used in situations where multiple requests need to be executed, consider using
-    the EsiLink class directly to avoid the overhead of creating and closing multiple
-    instances.
+        Args:
+            request: The ESI request to execute.
+            schema: The ESI schema for validation.
 
-    Args:
-        requests: The group of ESI requests to execute.
-        schema: The ESI schema for validation.
-        settings: The ESI link settings.
+        Returns:
+            EsiResponse if the request is successful, otherwise FailedEsiResponse.
+        """
+        request_group = EsiRequestGroup(
+            name="single_request_group",
+            description="A group containing a single ESI request.",
+            requests={request.request_id: request},
+        )
+        response_group = await self.make_requests(request_group, schema)
+        if request.request_id in response_group.failed_responses:
+            return response_group.failed_responses[request.request_id]
+        elif request.request_id in response_group.successful_responses:
+            return response_group.successful_responses[request.request_id]
+        else:
+            raise RuntimeError(
+                f"Response for request ID {request.request_id} not found in response group."
+            )
 
-    Returns:
-        EsiResponseGroup: The group of ESI request responses.
-    """
-    async with esi_link_factory(settings) as esi_link:
-        response_group = await esi_link.make_requests(requests, schema)
-        return response_group
+    async def make_requests(
+        self, requests: EsiRequestGroup, schema: EsiSchema
+    ) -> EsiResponseGroup:
+        """Validate, execute, and return a group of ESI request responses.
 
+        This function wraps the EsiLink class to provide a simple interface for executing
+        a group of ESI requests. It creates a temporary EsiLink instance, validates the
+        requests against the provided schema, and executes them. The responses are returned
+        as an EsiResponseGroup, containing both successful and failed responses.
 
-def esi_link_factory(settings: EsiLinkSettings) -> EsiLink:
-    """Factory function to create an instance of EsiLink.
+        When used in situations where multiple requests need to be executed, consider using
+        the EsiLink class directly to avoid the overhead of creating and closing multiple
+        instances.
 
-    Args:
-        settings (EsiLinkSettings): The application settings.
+        Args:
+            requests: The group of ESI requests to execute.
+            schema: The ESI schema for validation.
 
-    Returns:
-        EsiLink: An instance of the EsiLink class.
-    """
-    return EsiLink(
-        auth_manager_db_path=settings.auth_manager_db_file,
-        web_cache_path=settings.api_request_cache_file,
-        max_rate=settings.max_rate,
-        time_period=settings.time_period,
-    )
+        Returns:
+            EsiResponseGroup: The group of ESI request responses.
+        """
+        async with self.esi_link_factory() as esi_link:
+            response_group = await esi_link.make_requests(requests, schema)
+            return response_group

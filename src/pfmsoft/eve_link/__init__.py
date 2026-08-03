@@ -2,10 +2,7 @@
 
 CLI and library interface for working with EVE Online ESI.
 
-For library usage, EsiLink is the primary entrypoint. See:
-- docs/esi-link-library-contracts.md
-- docs/esi-request-package-contracts.md
-- docs/schema-package-contracts.md
+For library usage, EsiLink is the primary entrypoint.
 """
 
 from importlib.metadata import version
@@ -23,7 +20,7 @@ __license__ = "MIT"
 
 ###
 
-from pfmsoft.eve_link.esi_link import EsiLink, make_request, make_requests
+from pfmsoft.eve_link.esi_link import EsiLink, SimpleRequests
 from pfmsoft.eve_link.esi_request.models import (
     EsiRequest,
     EsiRequestGroup,
@@ -31,6 +28,7 @@ from pfmsoft.eve_link.esi_request.models import (
     EsiResponseGroup,
     FailedEsiResponse,
 )
+from pfmsoft.eve_link.schema.cache import SchemaCacheManager
 from pfmsoft.eve_link.schema.models import EsiSchema
 from pfmsoft.eve_link.settings import EsiLinkSettings, get_settings
 
@@ -41,9 +39,9 @@ __all__ = [
     "EsiResponse",
     "EsiResponseGroup",
     "EsiSchema",
-    "make_request",
-    "make_requests",
+    "SimpleRequests",
     "FailedEsiResponse",
     "EsiLinkSettings",
     "get_settings",
+    "SchemaCacheManager",
 ]
