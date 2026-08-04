@@ -78,7 +78,9 @@ def construct_api_request_settings(settings: EsiLinkSettings) -> ApiRequestSetti
     )
 
 
-@deprecated
+@deprecated(
+    "get_schema is deprecated, use the new schema management functions instead."
+)
 def get_schema(
     messenger: Console,
     schema_manager: SchemaCacheManager,
