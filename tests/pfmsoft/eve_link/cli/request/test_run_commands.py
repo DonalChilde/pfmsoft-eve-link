@@ -45,15 +45,19 @@ class _FakeEsiLink:
         self.schema = schema
         self.schema_calls: list[str | None] = []
 
-    async def make_request(self, *, request, schema):  # noqa: ANN001
+    async def make_request(self, **kwargs):  # noqa: ANN003
         """Return prepared single-response result or raise prepared error."""
+        request = kwargs.get("esi_request", kwargs.get("request"))
+        schema = kwargs.get("schema")
         self.calls.append((request, schema))
         if self.error is not None:
             raise self.error
         return self.result
 
-    async def make_requests(self, *, requests, schema):  # noqa: ANN001
+    async def make_requests(self, **kwargs):  # noqa: ANN003
         """Return the prepared result or raise the prepared error."""
+        requests = kwargs.get("esi_requests", kwargs.get("requests"))
+        schema = kwargs.get("schema")
         self.calls.append((requests, schema))
         if self.error is not None:
             raise self.error
