@@ -1,11 +1,11 @@
 # /// script
 # requires-python = ">=3.14"
 # dependencies = [
-#     "pfmsoft-eve-link>=0.4.1",
+#     "pfmsoft-eve-link>=0.4.5",
 #     "typer>=0.26.8",
 # ]
-# [tool.uv.sources]
-# pfmsoft-eve-link = { git = "https://github.com/DonalChilde/pfmsoft-eve-link.git", branch = "dev" }
+# [tool.uv]
+# exclude-newer-package = {pfmsoft-eve-link = false}
 # ///
 
 ####################################################################################################
@@ -13,32 +13,40 @@
 # Add this to the script config header to use the dev branch of pfmsoft-eve-link:
 # [tool.uv.sources]
 # pfmsoft-eve-link = { git = "https://github.com/DonalChilde/pfmsoft-eve-link.git", branch = "dev" }
+# And this to override a default dependency cool-down
+# [tool.uv]
+# exclude-newer-package = {pfmsoft-eve-link = false}
 ####################################################################################################
 
 """This script fetches market orders for a given region ID from the EVE Online API and saves them to a file or prints them to stdout."""
 
 import asyncio
+import logging
 from pathlib import Path
 from typing import Annotated, TypedDict, cast
 from uuid import uuid4
 
 import typer
 from pfmsoft.eve_snippets import json_io, save_text_file
+from rich.console import Console
 from whenever import Instant
 
 from pfmsoft.eve_link import EsiRequest, SimpleRequests
 from pfmsoft.eve_link.esi_request.models import EsiResponse, FailedEsiResponse
 from pfmsoft.eve_link.settings import get_settings
 
+logger = logging.getLogger(__name__)
+LOG_LEVEL = logging.WARNING
+
 app = typer.Typer(no_args_is_help=True)
 
 
 class DividedOrders(TypedDict):
-    buy_orders: list[MarketOrderTD]
-    sell_orders: list[MarketOrderTD]
+    buy_orders: list[GetMarketsRegionIdOrdersDetail]
+    sell_orders: list[GetMarketsRegionIdOrdersDetail]
 
 
-class MarketOrderTD(TypedDict):
+class GetMarketsRegionIdOrdersDetail(TypedDict):
     """TypedDict for market orders response."""
 
     duration: int
@@ -105,6 +113,14 @@ def main(
             show_default=True,
         ),
     ] = 2,
+    quiet: Annotated[
+        bool,
+        typer.Option(
+            "--quiet",
+            help="Whether to suppress status output messages",
+            show_default=True,
+        ),
+    ] = False,
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -114,7 +130,15 @@ def main(
         ),
     ] = False,
 ):
-    """Fetches market orders for a given region ID from the EVE Online API and saves them to a file or prints them to stdout."""
+    """Fetches market orders for a given region ID from the EVE Online API.
+
+    Response is saved to a file or printed to stdout.
+    """
+    if quiet:
+        messenger = Console(stderr=True, quiet=True)
+    else:
+        messenger = Console(stderr=True)
+
     ######################
     # Create an EsiRequest
     ######################
@@ -124,12 +148,30 @@ def main(
         path_parameters={"region_id": region_id},
         query_parameters={"order_type": "all"},
     )
-    _process_request(
-        esi_request=esi_request,
+
+    ###################################
+    # Fetch the response and process it
+    ###################################
+    settings = get_settings()
+    simple_requests = SimpleRequests(settings=settings)
+    esi_schema = simple_requests.get_schema()
+    response = asyncio.run(
+        simple_requests.make_request(esi_request=esi_request, schema=esi_schema)
+    )
+    response = _check_failed_response(esi_response=response)
+    processed_response = _process_response(esi_response=response)
+
+    #######################################
+    # Output the result to a file or stdout
+    #######################################
+    _output_result(
+        response=response,
+        data=processed_response,
         output_directory=output_directory,
         filename=filename,
         indent=indent,
         overwrite=overwrite,
+        messenger=messenger,
     )
 
 
@@ -138,32 +180,23 @@ def main(
 #############################################################################
 
 
-def _check_failed_response(
-    esi_response: EsiResponse | FailedEsiResponse,
-) -> EsiResponse:
-    if isinstance(esi_response, FailedEsiResponse):
-        typer.echo(
-            f"Failed to fetch market orders for region "
-            f"{esi_response.esi_request.path_parameters['region_id']}: "
-            f"{esi_response.failed_response.error_messages}"
-        )
-        raise typer.Exit(code=1)
-    return esi_response
-
-
 def _generate_default_filename(esi_response: EsiResponse) -> str:
     """Generates a default filename for the market orders response based on the region ID and timestamp."""
     region_id = cast(int, esi_response.esi_request.path_parameters["region_id"])
     timestamp = esi_response.response.metadata.received_at.timestamp_nanos()
-    return f"market_orders_{region_id}_{timestamp}.json"
+    return f"GetMarketsRegionIdOrders_{region_id}_{timestamp}.json"
 
 
 def _process_response(esi_response: EsiResponse) -> MarketOrdersResponse:
     """Processes the ESI response and returns a structured MarketOrdersResponse."""
+    if not isinstance(esi_response.response_data, list):
+        raise ValueError(
+            f"Expected a list of market orders, but got: {type(esi_response.response_data)}"
+        )
     orders_by_type: dict[int, DividedOrders] = {}
     region_id = cast(int, esi_response.esi_request.path_parameters["region_id"])
-
-    for order in esi_response.response.json:
+    data = cast(list[GetMarketsRegionIdOrdersDetail], esi_response.response_data)  # type: ignore
+    for order in data:
         type_id = order["type_id"]
         if type_id not in orders_by_type:
             orders_by_type[type_id] = {"buy_orders": [], "sell_orders": []}
@@ -188,43 +221,52 @@ def _process_response(esi_response: EsiResponse) -> MarketOrdersResponse:
 ################################################################
 # These functions should not need to be edited for a new script.
 ################################################################
-def _process_request(
-    esi_request: EsiRequest,
+def _check_failed_response(
+    esi_response: EsiResponse | FailedEsiResponse,
+) -> EsiResponse:
+    """Checks if the ESI response is a failed response and raises an error if so."""
+    if isinstance(esi_response, FailedEsiResponse):
+        logger.error("Failed response: %r", esi_response)
+        raise ValueError(
+            f"Failed request to: {esi_response.esi_request.operation_id}, "
+            f"error messages: {esi_response.failed_response.error_messages}"
+        )
+    return esi_response
+
+
+def _output_result(
+    response: EsiResponse,
+    data: MarketOrdersResponse,
     output_directory: Path,
     filename: str | None,
     indent: int,
     overwrite: bool,
+    messenger: Console,
 ) -> None:
-    """Processes the ESI request and returns the response."""
-    settings = get_settings()
-    simple_requests = SimpleRequests(settings=settings)
-    esi_schema = simple_requests.get_schema()
-    response = asyncio.run(
-        simple_requests.make_request(esi_request=esi_request, schema=esi_schema)
-    )
-    response = _check_failed_response(esi_response=response)
-    processed_response = _process_response(esi_response=response)
+    """Outputs the data to a file or stdout."""
     if output_directory != Path("-"):
         if filename is None:
             filename = _generate_default_filename(esi_response=response)
         try:
             output_path = save_text_file(
-                text=json_io.json_dumps(processed_response, indent=indent),
+                text=json_io.json_dumps(data, indent=indent),
                 directory=output_directory,
                 filename=filename,
                 overwrite=overwrite,
             )
         except FileExistsError as e:
-            typer.echo(
+            messenger.print(
                 f"File {output_directory / filename} already exists. Use --overwrite to overwrite it."
             )
             raise typer.Exit(code=1) from e
-        typer.echo(
-            f"Response expires at {response.expires_at_instant}, saved to {output_path}"
+        messenger.print(
+            f"Response from {response.esi_request.operation_id} expires at "
+            f"{response.expires_at_instant}, saved to {output_path}"
         )
         raise typer.Exit()
-    print(json_io.json_dumps(processed_response, indent=indent))
+    print(json_io.json_dumps(data, indent=indent))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=LOG_LEVEL)
     app()
