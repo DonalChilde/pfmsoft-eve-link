@@ -23,7 +23,7 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Annotated, TypedDict, cast
+from typing import Annotated, Any, TypedDict, cast
 from uuid import uuid4
 
 import typer
@@ -236,7 +236,7 @@ def _check_failed_response(
 
 def _output_result(
     response: EsiResponse,
-    data: MarketOrdersResponse,
+    data: Any,
     output_directory: Path,
     filename: str | None,
     indent: int,
