@@ -296,11 +296,15 @@ def test_make_requests_validates_builds_processes_and_groups(
         lambda esi_request, schema: runtime_request,
     )
 
-    async def fake_check_required_access_token(esi_request, built_runtime_request):  # noqa: ANN001
+    async def fake_attach_access_token_if_required(  # noqa: ANN001
+        esi_request, built_runtime_request
+    ):
         token_calls.append((esi_request, built_runtime_request))
 
     monkeypatch.setattr(
-        link, "_check_required_access_token", fake_check_required_access_token
+        link,
+        "_attach_access_token_if_required",
+        fake_attach_access_token_if_required,
     )
 
     result = asyncio.run(link.make_requests(group, schema))
@@ -313,7 +317,7 @@ def test_make_requests_validates_builds_processes_and_groups(
     assert processed_request.parameters == {"datasource": "tranquility"}
     assert result.name == "batch"
     assert result.description == "desc"
-    assert result.requests == group.requests
+    assert result.successful_responses[request_id].esi_request is request
     assert result.successful_responses[request_id].response.json == {"status": "ok"}
 
 
@@ -361,7 +365,7 @@ def test_make_esi_response_group_preserves_request_metadata() -> None:
 
     assert result.name == "batch"
     assert result.description == "desc"
-    assert result.requests == group.requests
+    assert result.successful_responses[request_id].esi_request is request
     assert (
         result.successful_responses[request_id].esi_runtime_request is runtime_request
     )

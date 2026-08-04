@@ -30,6 +30,33 @@ class _FakeEsiLink:
             raise self.error
 
 
+class _FakeSimpleRequests:
+    """SimpleRequests-like stub for validate command tests."""
+
+    def __init__(
+        self,
+        *,
+        schema: object | None = None,
+        schema_error: Exception | None = None,
+        validator: _FakeEsiLink | None = None,
+    ) -> None:
+        self.schema = schema
+        self.schema_error = schema_error
+        self.validator = validator or _FakeEsiLink()
+        self.schema_calls: list[str | None] = []
+
+    def get_schema(self, *, compatibility_date: str | None = None) -> object:
+        """Return configured schema and record compatibility-date selection."""
+        self.schema_calls.append(compatibility_date)
+        if self.schema_error is not None:
+            raise self.schema_error
+        return self.schema
+
+    def esi_link_factory(self) -> _FakeEsiLink:
+        """Return configured validator object."""
+        return self.validator
+
+
 class _FakeSchemaManager:
     """Schema cache stub for validating cached schema selection branches."""
 
@@ -189,13 +216,7 @@ def test_request_validate_uses_most_recent_cached_schema_quietly(
     """Use the newest cached schema when no date is provided and suppress output with --quiet."""
     fake_link = _FakeEsiLink()
     schema = object()
-    manager = _FakeSchemaManager(
-        entries=[
-            SimpleNamespace(compatibility_date="2026-06-09"),
-            SimpleNamespace(compatibility_date="2026-06-10"),
-        ],
-        loaded={"2026-06-10": schema},
-    )
+    simple_requests = _FakeSimpleRequests(schema=schema, validator=fake_link)
     settings = SimpleNamespace(schema_cache_directory=tmp_path / "schema-cache")
 
     monkeypatch.setattr(
@@ -209,17 +230,16 @@ def test_request_validate_uses_most_recent_cached_schema_quietly(
         lambda: _requests_json(operation_id="GetStatus"),
     )
     monkeypatch.setattr(
-        validate_command, "SchemaCacheManager", lambda **_kwargs: manager
-    )
-    monkeypatch.setattr(
-        validate_command, "esi_link_factory", lambda _settings: fake_link
+        validate_command,
+        "SimpleRequests",
+        lambda settings: simple_requests,
     )
 
     result = runner.invoke(validate_command.app, ["--quiet"])
 
     assert result.exit_code == 0
     assert result.stderr == ""
-    assert manager.load_calls == ["2026-06-10"]
+    assert simple_requests.schema_calls == [None]
     assert len(fake_link.calls) == 1
     assert fake_link.calls[0][1] is schema
 
@@ -238,8 +258,8 @@ def test_request_validate_reports_parse_errors_from_stdin(
     )
     monkeypatch.setattr(
         validate_command,
-        "esi_link_factory",
-        lambda _settings: _FakeEsiLink(),
+        "SimpleRequests",
+        lambda settings: _FakeSimpleRequests(schema=object()),
     )
 
     result = runner.invoke(
@@ -258,7 +278,9 @@ def test_request_validate_reports_empty_cache_without_generic_followup(
 ) -> None:
     """Report an empty schema cache once, without a second generic cache-load error."""
     fake_link = _FakeEsiLink()
-    manager = _FakeSchemaManager(entries=[], loaded={})
+    simple_requests = _FakeSimpleRequests(
+        schema_error=RuntimeError("No cached schemas found"), validator=fake_link
+    )
     settings = SimpleNamespace(schema_cache_directory=tmp_path / "schema-cache")
 
     monkeypatch.setattr(
@@ -272,17 +294,16 @@ def test_request_validate_reports_empty_cache_without_generic_followup(
         lambda: _requests_json(operation_id="GetStatus"),
     )
     monkeypatch.setattr(
-        validate_command, "SchemaCacheManager", lambda **_kwargs: manager
-    )
-    monkeypatch.setattr(
-        validate_command, "esi_link_factory", lambda _settings: fake_link
+        validate_command,
+        "SimpleRequests",
+        lambda settings: simple_requests,
     )
 
     result = runner.invoke(validate_command.app, [])
 
     assert result.exit_code == 1
-    assert "No cached schemas found" in result.stderr
-    assert "Failed to load cached schema" not in result.stderr
+    assert isinstance(result.exception, RuntimeError)
+    assert "No cached schemas found" in str(result.exception)
 
 
 def test_request_validate_reports_unexpected_validator_errors(
@@ -294,6 +315,7 @@ def test_request_validate_reports_unexpected_validator_errors(
     schema_path.write_text(_schema_json(), encoding="utf-8")
     settings = SimpleNamespace(schema_cache_directory=tmp_path / "schema-cache")
     fake_link = _FakeEsiLink(error=RuntimeError("boom"))
+    simple_requests = _FakeSimpleRequests(schema=object(), validator=fake_link)
 
     monkeypatch.setattr(
         validate_command,
@@ -306,7 +328,9 @@ def test_request_validate_reports_unexpected_validator_errors(
         lambda: _requests_json(operation_id="GetStatus"),
     )
     monkeypatch.setattr(
-        validate_command, "esi_link_factory", lambda _settings: fake_link
+        validate_command,
+        "SimpleRequests",
+        lambda settings: simple_requests,
     )
 
     result = runner.invoke(validate_command.app, ["--schema", str(schema_path)])
