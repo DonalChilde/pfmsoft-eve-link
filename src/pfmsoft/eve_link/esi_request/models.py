@@ -178,6 +178,38 @@ class EsiResponse:
         """Serialize the EsiResponse."""
         return EsiResponseRoot(root=self).model_dump_json(indent=indent)
 
+    @property
+    def response_data(self) -> Any:
+        """Return the JSON response data associated with this EsiResponse."""
+        return self.response.json
+
+    @property
+    def received_at_instant(self) -> Instant:
+        """Return the instant at which the response was received."""
+        return self.response.metadata.received_at
+
+    @property
+    def expires_at_instant(self) -> Instant | None:
+        """Return the instant at which the response expires, if any."""
+        return (
+            Instant.from_timestamp(self.response.metadata.expires_at)
+            if self.response.metadata.expires_at
+            else None
+        )
+
+    def simple_response(self) -> SimplifiedEsiResponse:
+        """Return a simplified version of this EsiResponse.
+
+        This is useful for serialization and deserialization, as it removes the
+        response metadata and other details that are not needed for most use cases.
+        """
+        return SimplifiedEsiResponse(
+            esi_request=self.esi_request,
+            response_data=self.response_data,
+            received_at_instant=self.received_at_instant,
+            expires_at_instant=self.expires_at_instant,
+        )
+
 
 EsiResponseRoot = RootModel[EsiResponse]
 

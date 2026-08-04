@@ -2,8 +2,7 @@
 
 import asyncio
 from pathlib import Path
-from typing import Annotated, Any
-from uuid import UUID
+from typing import Annotated
 
 import typer
 from pfmsoft.eve_snippets import json_io, save_text_file
@@ -12,21 +11,14 @@ from rich.json import JSON
 
 from pfmsoft.eve_link.cli.helpers import (
     get_eve_link_settings_from_context,
-    get_schema,
     get_stdin,
 )
-from pfmsoft.eve_link.esi_link import esi_link_factory
+from pfmsoft.eve_link.esi_link import SimpleRequests
 from pfmsoft.eve_link.esi_request.models import (
-    EsiRequestGroup,
     EsiRequestRoot,
     EsiResponse,
-    EsiResponseGroup,
     FailedEsiResponse,
 )
-from pfmsoft.eve_link.esi_request.validate import (
-    EsiRequestValidationErrors,
-)
-from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
 from pfmsoft.eve_link.schema.helpers.schema_files import load_esi_schema_from_file
 
 app = typer.Typer(no_args_is_help=True)
@@ -145,7 +137,7 @@ def make_requests(
         )
         raise typer.Exit(code=1)
     settings = get_eve_link_settings_from_context(ctx)
-    esi_link = esi_link_factory(settings)
+    simple_requests = SimpleRequests(settings=settings)
 
     # Load the ESI request JSON from the input file or stdin
     if file_in == Path("-"):
@@ -163,8 +155,8 @@ def make_requests(
     except Exception as e:
         messenger.print(f"[red]Error: Failed to parse ESI requests JSON - {e}[/red]")
         raise typer.Exit(code=1) from e
-    request_key = esi_request.request_id
 
+    # load the ESI schema from file or cache
     if schema_file is not None:
         try:
             esi_schema = load_esi_schema_from_file(schema_file)
@@ -172,55 +164,30 @@ def make_requests(
             messenger.print(f"[red]Error: Failed to load schema from file - {e}[/red]")
             raise typer.Exit(code=1) from e
     else:
-        # if compatibility_date is None, get the most recent cached schema
-        manager = SchemaCacheManager(cache_directory=settings.schema_cache_directory)
-        esi_schema = get_schema(
-            messenger=messenger,
-            schema_manager=manager,
-            compatibility_date=compatibility_date,
-        )
+        esi_schema = simple_requests.get_schema(compatibility_date=compatibility_date)
 
-    async def run_requests():
-        async with esi_link:
-            try:
-                request_group = EsiRequestGroup(
-                    name="Internal use group",
-                    requests={esi_request.request_id: esi_request},
-                )
-                responses = await esi_link.make_requests(
-                    esi_requests=request_group,
-                    schema=esi_schema,
-                )
-            except EsiRequestValidationErrors as e:
-                messenger.print(
-                    f"[red]Error: Requests failed due to validation errors[/red]"
-                )
-                for error in e.errors:
-                    messenger.print(f"[red] - {error}[/red]")
-                raise typer.Exit(code=1) from e
-            return responses
-
-    response_group = asyncio.run(run_requests())
-    esi_response = _get_response(response_group, request_key)
+    esi_response = asyncio.run(
+        simple_requests.make_request(esi_request=esi_request, schema=esi_schema)
+    )
 
     if file_out == Path("-"):
         if plain:
             if debug:
                 print(esi_response.serialize(indent=indent))
-                _fail_check(messenger, esi_response)
+                esi_response = _fail_check(messenger, esi_response)
             else:
-                _fail_check(messenger, esi_response)
-                json_result = _get_response_json(esi_response)
-                print(json_io.json_dumps(json_result, indent=indent))
+                esi_response = _fail_check(messenger, esi_response)
+                print(json_io.json_dumps(esi_response.response_data, indent=indent))
             raise typer.Exit()
         else:
             if debug:
                 messenger.print(JSON(esi_response.serialize(indent=indent)))
-                _fail_check(messenger, esi_response)
+                esi_response = _fail_check(messenger, esi_response)
             else:
-                _fail_check(messenger, esi_response)
-                json_result = _get_response_json(esi_response)
-                messenger.print(JSON.from_data(json_result, indent=indent))
+                esi_response = _fail_check(messenger, esi_response)
+                messenger.print(
+                    JSON.from_data(esi_response.response_data, indent=indent)
+                )
             raise typer.Exit()
 
     if debug:
@@ -231,12 +198,11 @@ def make_requests(
             filename=file_out.name,
             overwrite=overwrite,
         )
-        _fail_check(messenger, esi_response)
+        esi_response = _fail_check(messenger, esi_response)
     else:
         # Failcheck before saving result
-        _fail_check(messenger, esi_response)
-        json_result = _get_response_json(esi_response)
-        output_text = json_io.json_dumps(json_result, indent=indent)
+        esi_response = _fail_check(messenger, esi_response)
+        output_text = json_io.json_dumps(esi_response.response_data, indent=indent)
         output_path = save_text_file(
             text=output_text,
             directory=file_out.parent,
@@ -244,15 +210,28 @@ def make_requests(
             overwrite=overwrite,
         )
     messenger.print(f"[green]ESI response written to {output_path}[/green]")
-    _fail_check(messenger, esi_response)
     raise typer.Exit()
 
 
-def _fail_check(messenger: Console, response: EsiResponse | FailedEsiResponse) -> None:
-    """Checks for failures before exit."""
+def _fail_check(
+    messenger: Console, response: EsiResponse | FailedEsiResponse
+) -> EsiResponse:
+    """Checks for failures before exit.
+
+    Args:
+        messenger: The console to print messages to.
+        response: The ESI response to check.
+
+    Returns:
+        The ESI response if it is successful.
+
+    Raises:
+        typer.Exit: If the response is a failure.
+
+    """
     match response:
         case EsiResponse():
-            return
+            return response
         case FailedEsiResponse():
             messenger.print(
                 f"[red]Error: Request failed - {response.failed_response.error_messages}[/red]"
@@ -261,26 +240,3 @@ def _fail_check(messenger: Console, response: EsiResponse | FailedEsiResponse) -
         case _:
             messenger.print("[red]Error: Unknown response type[/red]")
             raise typer.Exit(1)
-
-
-def _get_response_json(response: EsiResponse | FailedEsiResponse) -> Any | None:
-    match response:
-        case EsiResponse():
-            return response.response.json
-        case FailedEsiResponse():
-            return None
-        case _:
-            raise ValueError("Unknown response type")
-
-
-def _get_response(
-    response_group: EsiResponseGroup, request_key: UUID
-) -> EsiResponse | FailedEsiResponse:
-    """Get the response for a specific request key."""
-    successful_response = response_group.successful_responses.get(request_key)
-    if successful_response is not None:
-        return successful_response
-    failed_response = response_group.failed_responses.get(request_key)
-    if failed_response is not None:
-        return failed_response
-    raise KeyError(f"Request key {request_key} not found in responses.")

@@ -11,18 +11,13 @@ from rich.json import JSON
 
 from pfmsoft.eve_link.cli.helpers import (
     get_eve_link_settings_from_context,
-    get_schema,
     get_stdin,
 )
-from pfmsoft.eve_link.esi_link import esi_link_factory
+from pfmsoft.eve_link.esi_link import SimpleRequests
 from pfmsoft.eve_link.esi_request.models import (
     EsiRequestGroupRoot,
     EsiResponseGroup,
 )
-from pfmsoft.eve_link.esi_request.validate import (
-    EsiRequestValidationErrors,
-)
-from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
 from pfmsoft.eve_link.schema.helpers.schema_files import load_esi_schema_from_file
 
 app = typer.Typer(no_args_is_help=True)
@@ -131,7 +126,7 @@ def make_requests(
         )
         raise typer.Exit(code=1)
     settings = get_eve_link_settings_from_context(ctx)
-    esi_link = esi_link_factory(settings)
+    simple_requests = SimpleRequests(settings=settings)
 
     # Load the ESI request-group JSON from the input file or stdin
     if file_in == Path("-"):
@@ -161,30 +156,11 @@ def make_requests(
             raise typer.Exit(code=1) from e
     else:
         # if compatibility_date is None, get the most recent cached schema
-        manager = SchemaCacheManager(cache_directory=settings.schema_cache_directory)
-        esi_schema = get_schema(
-            messenger=messenger,
-            schema_manager=manager,
-            compatibility_date=compatibility_date,
-        )
+        esi_schema = simple_requests.get_schema(compatibility_date=compatibility_date)
 
-    async def run_requests():
-        async with esi_link:
-            try:
-                responses = await esi_link.make_requests(
-                    esi_requests=esi_requests,
-                    schema=esi_schema,
-                )
-            except EsiRequestValidationErrors as e:
-                messenger.print(
-                    f"[red]Error: Requests failed due to validation errors[/red]"
-                )
-                for error in e.errors:
-                    messenger.print(f"[red] - {error}[/red]")
-                raise typer.Exit(code=1) from e
-            return responses
-
-    responses = asyncio.run(run_requests())
+    responses = asyncio.run(
+        simple_requests.make_requests(esi_requests=esi_requests, schema=esi_schema)
+    )
 
     if file_out == Path("-"):
         if plain:

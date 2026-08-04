@@ -8,15 +8,13 @@ from rich.console import Console
 
 from pfmsoft.eve_link.cli.helpers import (
     get_eve_link_settings_from_context,
-    get_schema,
     get_stdin,
 )
-from pfmsoft.eve_link.esi_link import esi_link_factory
+from pfmsoft.eve_link.esi_link import SimpleRequests
 from pfmsoft.eve_link.esi_request.models import EsiRequestGroupRoot
 from pfmsoft.eve_link.esi_request.validate import (
     EsiRequestValidationErrors,
 )
-from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
 from pfmsoft.eve_link.schema.helpers.schema_files import load_esi_schema_from_file
 
 app = typer.Typer(no_args_is_help=True)
@@ -77,7 +75,7 @@ def validate_requests(
         messenger.print("[red]Error: --schema and --date are mutually exclusive.[/red]")
         raise typer.Exit(code=1)
     settings = get_eve_link_settings_from_context(ctx)
-    esi_link = esi_link_factory(settings)
+    simple_requests = SimpleRequests(settings=settings)
 
     if file_in == Path("-"):
         requests_data = get_stdin()
@@ -101,15 +99,11 @@ def validate_requests(
             messenger.print(f"[red]Error: Failed to load schema from file - {e}[/red]")
             raise typer.Exit(code=1) from e
     else:
-        manager = SchemaCacheManager(cache_directory=settings.schema_cache_directory)
-        esi_schema = get_schema(
-            messenger=messenger,
-            schema_manager=manager,
-            compatibility_date=compatibility_date,
-        )
+        esi_schema = simple_requests.get_schema(compatibility_date=compatibility_date)
 
     all_errors: list[str] = []
     valid_count = 0
+    esi_link = simple_requests.esi_link_factory()
     for request_id, request in esi_requests.requests.items():
         try:
             esi_link.validate_request(request, esi_schema)
