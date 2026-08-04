@@ -200,7 +200,7 @@ def _process_request(
     simple_requests = SimpleRequests(settings=settings)
     esi_schema = simple_requests.get_schema()
     response = asyncio.run(
-        simple_requests.make_request(request=esi_request, schema=esi_schema)
+        simple_requests.make_request(esi_request=esi_request, schema=esi_schema)
     )
     response = _check_failed_response(esi_response=response)
     processed_response = _process_response(esi_response=response)
@@ -219,8 +219,9 @@ def _process_request(
                 f"File {output_directory / filename} already exists. Use --overwrite to overwrite it."
             )
             raise typer.Exit(code=1) from e
-        # TODO add cache expires in ? seconds.
-        typer.echo(f"Response saved to {output_path}")
+        typer.echo(
+            f"Response expires at {response.expires_at_instant},  saved to {output_path}"
+        )
         raise typer.Exit()
     print(json_io.json_dumps(processed_response, indent=indent))
 

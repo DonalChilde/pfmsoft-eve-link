@@ -24,7 +24,7 @@ import typer
 from pfmsoft.eve_snippets import json_io, save_text_file
 from pfmsoft.eve_snippets.httpx2.http_session_factory import client_manager
 
-from pfmsoft.eve_link import EsiRequest, make_request, make_requests
+from pfmsoft.eve_link import EsiRequest, SimpleRequests
 from pfmsoft.eve_link.esi_request.models import (
     EsiRequestGroup,
     EsiResponse,
@@ -101,33 +101,39 @@ def main(
     ######################
     # Create an EsiRequest
     ######################
-    esi_request = EsiRequest(
+    market_groups_request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetMarketsGroups",
     )
     settings = get_settings()
-    esi_schema = _get_schema(settings)
-    response = asyncio.run(
-        make_request(request=esi_request, settings=settings, schema=esi_schema)
-    )
-    response = _check_failed_response(esi_request=esi_request, esi_response=response)
-    market_group_ids = response.response.json
-    esi_request_group = _create_request_group_for_market_groups(
-        market_group_ids=market_group_ids
-    )
-    response_group = asyncio.run(
-        make_requests(requests=esi_request_group, settings=settings, schema=esi_schema)
-    )
-    _check_failed_response_group(esi_response_group=response_group)
-    # if response_group.failed_responses:
-    #     for request_id, failed_response in response_group.failed_responses.items():
-    #         typer.echo(
-    #             f"Failed to fetch market group {esi_request_group.requests[request_id].path_parameters['market_group_id']}: {failed_response.failed_response.error_messages}"
-    #         )
-    #     raise typer.Exit(code=1)
-    market_group_details = _collect_market_group_details(
-        esi_response_group=response_group
-    )
+    simple_requests = SimpleRequests(settings=settings)
+    esi_schema = simple_requests.get_schema(compatibility_date=None)
+    esi_link = simple_requests.esi_link_factory()
+
+    async def fetch_market_groups():
+        async with esi_link:
+            response = await esi_link.make_request(
+                esi_request=market_groups_request, schema=esi_schema
+            )
+            if isinstance(response, FailedEsiResponse):
+                typer.echo(
+                    f"Failed to fetch market groups: {response.failed_response.error_messages}"
+                )
+                raise typer.Exit(code=1)
+            market_group_ids = response.response_data
+            esi_request_group = _create_request_group_for_market_groups(
+                market_group_ids=market_group_ids
+            )
+            market_details_response = await esi_link.make_requests(
+                esi_requests=esi_request_group, schema=esi_schema
+            )
+            _check_failed_response_group(esi_response_group=market_details_response)
+            market_group_details = _collect_market_group_details(
+                esi_response_group=market_details_response
+            )
+            return market_group_details
+
+    market_group_details = asyncio.run(fetch_market_groups())
 
     print(json_io.json_dumps(market_group_details, indent=indent))
 
@@ -149,12 +155,13 @@ def _create_request_group_for_market_groups(
 
 def _collect_market_group_details(
     esi_response_group: EsiResponseGroup,
-) -> dict[int, dict[str, Any]]:
+) -> dict[int, MarketGroupDetails]:
     """Collects market group details from the ESI response group and returns a dictionary of market group details."""
-    market_group_details: dict[int, dict[str, Any]] = {}
+    market_group_details: dict[int, MarketGroupDetails] = {}
     for _, response in esi_response_group.successful_responses.items():
         market_group_id = cast(int, response.response.json["market_group_id"])
-        market_group_details[market_group_id] = response.response.json
+        market_group_detail = cast(MarketGroupDetails, response.response.json)
+        market_group_details[market_group_id] = market_group_detail
     return market_group_details
 
 

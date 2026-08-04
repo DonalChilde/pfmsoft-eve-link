@@ -19,12 +19,10 @@ from uuid import uuid4
 
 import typer
 from pfmsoft.eve_snippets import save_text_file
-from pfmsoft.eve_snippets.httpx2.http_session_factory import client_manager
 
-from pfmsoft.eve_link import EsiRequest, make_request
+from pfmsoft.eve_link import EsiRequest, SimpleRequests
 from pfmsoft.eve_link.esi_request.models import FailedEsiResponse
-from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
-from pfmsoft.eve_link.settings import USER_AGENT, EsiLinkSettings
+from pfmsoft.eve_link.settings import EsiLinkSettings
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -119,18 +117,11 @@ def main(
         max_rate=max_rate,
         time_period=time_period,
     )
+    simple_requests = SimpleRequests(settings=settings)
 
     # Use the latest schema from the schema cache. If the cache is empty, or new schemas
     # are available, fetch them from the ESI API and cache them.
-    schema_manager = SchemaCacheManager(cache_directory=schema_cache_path)
-    with client_manager(USER_AGENT) as session:
-        schema_manager.fetch_updates(session=session)
-    esi_schema = schema_manager.latest_schema()
-    if esi_schema is None:
-        typer.echo(
-            f"Failed to fetch the latest schema. Please check your cache and try again."
-        )
-        raise typer.Exit(code=1)
+    esi_schema = simple_requests.get_schema(compatibility_date=None)
 
     # Define the ESI request for fetching market orders in the specified region. The
     # request is constructed with a unique request ID, the operation ID for fetching
@@ -147,8 +138,8 @@ def main(
     # EsiLink object around and reuse it for multiple requests, top avoid the overhead
     # of reinitializing it for each request.
     response = asyncio.run(
-        make_request(
-            request=market_orders_request, settings=settings, schema=esi_schema
+        simple_requests.make_request(
+            esi_request=market_orders_request, schema=esi_schema
         )
     )
     if isinstance(response, FailedEsiResponse):
