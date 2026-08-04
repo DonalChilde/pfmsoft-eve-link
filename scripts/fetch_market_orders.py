@@ -220,7 +220,7 @@ def _process_request(
             )
             raise typer.Exit(code=1) from e
         typer.echo(
-            f"Response expires at {response.expires_at_instant},  saved to {output_path}"
+            f"Response expires at {response.expires_at_instant}, saved to {output_path}"
         )
         raise typer.Exit()
     print(json_io.json_dumps(processed_response, indent=indent))
