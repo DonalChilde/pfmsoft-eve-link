@@ -47,6 +47,7 @@ def generate_request_builders(
                 operation,
                 exclude=exclude or frozenset(),
             ),
+            "has_request_body": operation.request_body is not None,
             "compatibility_date": schema.compatibility_date,
         })
 

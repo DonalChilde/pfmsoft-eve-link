@@ -197,3 +197,50 @@ def test_generate_request_builders_respects_excluded_parameter_names() -> None:
     assert "name: str | None = None" not in source
     assert "accept_language" not in source
     assert "market_group_id: int" in source
+
+
+def test_generate_request_builders_only_passes_request_body_when_needed() -> None:
+    """Require request_body for body-capable operations without adding it otherwise."""
+    schema = EsiSchema(
+        dereferenced_schema={
+            "openapi": "3.0.0",
+            "info": {"version": "2026-06-09"},
+            "servers": [{"url": "https://esi.evetech.net/latest"}],
+            "paths": {
+                "/markets/groups/": {
+                    "get": {
+                        "operationId": "GetMarketsGroups",
+                        "tags": ["Market"],
+                        "description": "Get a list of market groups.",
+                        "parameters": [],
+                        "responses": {"200": {"description": "OK"}},
+                        "x-compatibility-date": "2026-06-09",
+                    },
+                    "post": {
+                        "operationId": "PostMarketsGroups",
+                        "tags": ["Market"],
+                        "description": "Create a market group.",
+                        "parameters": [],
+                        "requestBody": {
+                            "content": {"application/json": {"schema": {}}}
+                        },
+                        "responses": {"200": {"description": "OK"}},
+                        "x-compatibility-date": "2026-06-09",
+                    },
+                }
+            },
+        }
+    )
+
+    source = generate_request_builders(schema=schema, module_name="generated_requests")
+
+    assert "def get_markets_groups(" in source
+    assert (
+        "request_body"
+        not in source.split("def get_markets_groups(", 1)[1].split(
+            "def post_markets_groups(", 1
+        )[0]
+    )
+    assert "request_body: Any" in source
+    assert "request_body: Any | None = None" not in source
+    assert "request_body=request_body" in source
