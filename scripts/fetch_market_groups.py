@@ -35,6 +35,7 @@ from rich.console import Console
 from whenever import Instant
 
 from pfmsoft.eve_link import EsiLink, EsiRequest, EsiSchema, SimpleRequests
+from pfmsoft.eve_link import request_factory as RF
 from pfmsoft.eve_link.cli.helpers import output_to_stdout_or_file
 from pfmsoft.eve_link.esi_request.models import (
     EsiRequestGroup,
@@ -279,13 +280,8 @@ async def fetch_market_groups(
     esi_link: EsiLink, esi_schema: EsiSchema
 ) -> EsiResponse | FailedEsiResponse:
     """Fetches the list of market group IDs from the EVE Online API."""
-    market_groups_request = EsiRequest(
-        request_id=uuid4(),
-        operation_id="GetMarketsGroups",
-    )
-    return await esi_link.make_request(
-        esi_request=market_groups_request, schema=esi_schema
-    )
+    esi_request = RF.market.get_markets_groups()
+    return await esi_link.make_request(esi_request=esi_request, schema=esi_schema)
 
 
 async def fetch_market_groups_details(
@@ -293,11 +289,7 @@ async def fetch_market_groups_details(
 ) -> EsiResponseGroup:
     """Fetches the details for each market group ID from the EVE Online API."""
     requests = [
-        EsiRequest(
-            request_id=uuid4(),
-            operation_id="GetMarketsGroupsMarketGroupId",
-            path_parameters={"market_group_id": market_group_id},
-        )
+        RF.market.get_markets_groups_market_group_id(market_group_id=market_group_id)
         for market_group_id in market_group_ids
     ]
     request_group = EsiRequestGroup(requests={r.request_id: r for r in requests})
