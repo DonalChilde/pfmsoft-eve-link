@@ -207,7 +207,7 @@ def test_validate_aggregates_multiple_errors() -> None:
         operation_id="post_character_note",
         path_parameters={"character_id": "bad"},
         query_parameters={"page": 1, "unknown": "value"},
-        json_payload={"priority": "invalid", "extra": "x"},
+        request_body={"priority": "invalid", "extra": "x"},
         **_auth_fields(),
     )
 

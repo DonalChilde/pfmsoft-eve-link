@@ -76,7 +76,7 @@ class EsiRequest:
         - If-Modified-Since headers. 
 
         Those are set at runtime during HTTP execution."""
-    json_payload: Any | None = None
+    request_body: Any | None = None
     """The JSON payload of the request, if applicable. This is used for POST, PUT, and PATCH 
         requests."""
     character_id: int | None = None

@@ -97,7 +97,7 @@ def post_names() -> tuple[EsiRequest, str]:
         name="Post Universe Names",
         description="Post universe names for the specified IDs.",
         operation_id="PostUniverseNames",
-        json_payload=[34, 10000002],
+        request_body=[34, 10000002],
     )
 
     return request_group, "post_names.request.json"

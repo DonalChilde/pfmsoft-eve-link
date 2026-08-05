@@ -1,0 +1,52 @@
+"""Generated request builders for {{ module_name }}."""
+
+from __future__ import annotations
+
+from typing import Any
+from uuid import uuid4
+
+from pfmsoft.eve_link import EsiRequest
+from pfmsoft.eve_link.language import LangType
+
+X_COMPATIBILITY_DATE: str = "{{ compatibility_date }}"
+ACCEPT_LANGUAGE: LangType = "en"
+X_TENANT: str = "tranquility"
+
+{% for tag in tags %}
+####################################################
+# {{ tag.name }}
+####################################################
+
+{% for operation in tag.operations %}
+def {{ operation.function_name }}(
+    *,
+    {% for parameter in operation.parameters %}
+    {{ parameter.argument_name }}: {{ parameter.type_hint }}{% if parameter.has_default %} | None = {{ parameter.default }}{% endif %}{% if not loop.last %},
+    {% endif %}{% endfor %}
+) -> EsiRequest:
+    """{{ operation.description }}"""
+    path_parameters: dict[str, Any] = {}
+    query_parameters: dict[str, Any] = {}
+    header_parameters: dict[str, Any] = {}
+
+    {% for parameter in operation.parameters -%}
+    {% if parameter.kind == "path" -%}
+    path_parameters["{{ parameter.schema_name }}"] = {{ parameter.argument_name }}
+    {% endif -%}
+    {% if parameter.kind == "query" -%}
+    query_parameters["{{ parameter.schema_name }}"] = {{ parameter.argument_name }}
+    {% endif -%}
+    {% if parameter.kind == "header" -%}
+    header_parameters["{{ parameter.schema_name }}"] = {{ parameter.argument_name }}
+    {% endif -%}
+    {% endfor %}
+    request = EsiRequest(
+        request_id=uuid4(),
+        operation_id="{{ operation.operation_id }}",
+        header_parameters=header_parameters,
+        path_parameters=path_parameters,
+        query_parameters=query_parameters,
+    )
+    return request
+
+{% endfor %}{% endfor %}
