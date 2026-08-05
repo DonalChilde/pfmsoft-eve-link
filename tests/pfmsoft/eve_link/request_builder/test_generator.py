@@ -244,3 +244,36 @@ def test_generate_request_builders_only_passes_request_body_when_needed() -> Non
     assert "request_body: Any" in source
     assert "request_body: Any | None = None" not in source
     assert "request_body=request_body" in source
+
+
+def test_generate_request_builders_requires_auth_arguments_for_authenticated_ops() -> (
+    None
+):
+    """Authenticated operations should expose auth arguments and populate them."""
+    schema = EsiSchema(
+        dereferenced_schema={
+            "openapi": "3.0.0",
+            "info": {"version": "2026-06-09"},
+            "servers": [{"url": "https://esi.evetech.net/latest"}],
+            "paths": {
+                "/markets/groups/": {
+                    "get": {
+                        "operationId": "GetMarketsGroups",
+                        "tags": ["Market"],
+                        "description": "Get a list of market groups.",
+                        "parameters": [],
+                        "security": [{"evesso": []}],
+                        "responses": {"200": {"description": "OK"}},
+                        "x-compatibility-date": "2026-06-09",
+                    }
+                }
+            },
+        }
+    )
+
+    source = generate_request_builders(schema=schema, module_name="generated_requests")
+
+    assert "auth_character_id: int," in source
+    assert "auth_credential_id: UUID," in source
+    assert "auth_character_id=auth_character_id" in source
+    assert "auth_credential_id=auth_credential_id" in source

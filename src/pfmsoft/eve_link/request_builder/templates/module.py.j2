@@ -1,9 +1,7 @@
 """Generated request builders for {{ module_name }}."""
 
-from __future__ import annotations
-
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from pfmsoft.eve_link import EsiRequest
 from pfmsoft.eve_link.language import LangType
@@ -20,13 +18,16 @@ X_TENANT: str = "tranquility"
 {% for operation in tag.operations %}
 def {{ operation.function_name }}(
     *,
+    {% if operation.requires_authentication %}
+    auth_character_id: int,
+    auth_credential_id: UUID,
+    {% endif %}
     {% if operation.has_request_body %}
     request_body: Any,
     {% endif %}
     {% for parameter in operation.parameters %}
     {{ parameter.argument_name }}: {{ parameter.type_hint }}{% if parameter.has_default %} | None = {{ parameter.default }}{% endif %}{% if not loop.last %},
-    {% endif %}{% endfor %}{% if operation.parameters and operation.has_request_body %},
-    {% endif %}
+    {% endif %}{% endfor %}
 ) -> EsiRequest:
     """{{ operation.description }}"""
     path_parameters: dict[str, Any] = {}
@@ -50,7 +51,9 @@ def {{ operation.function_name }}(
         header_parameters=header_parameters,
         path_parameters=path_parameters,
         query_parameters=query_parameters,
-        {% if operation.has_request_body %}request_body=request_body,{% endif %}
+        {% if operation.requires_authentication %}auth_character_id=auth_character_id,
+        auth_credential_id=auth_credential_id,
+        {% endif %}{% if operation.has_request_body %}request_body=request_body,{% endif %}
     )
     return request
 

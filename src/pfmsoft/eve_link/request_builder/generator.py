@@ -48,6 +48,7 @@ def generate_request_builders(
                 exclude=exclude or frozenset(),
             ),
             "has_request_body": operation.request_body is not None,
+            "requires_authentication": operation.is_authentication_required,
             "compatibility_date": schema.compatibility_date,
         })
 
