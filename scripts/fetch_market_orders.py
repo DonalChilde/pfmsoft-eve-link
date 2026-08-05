@@ -34,7 +34,7 @@ from pydantic import RootModel
 from rich.console import Console
 from whenever import Instant
 
-from pfmsoft.eve_link import EsiRequest, SimpleRequests
+from pfmsoft.eve_link import EsiLink, EsiRequest, EsiSchema, SimpleRequests
 from pfmsoft.eve_link.cli.helpers import output_to_stdout_or_file
 from pfmsoft.eve_link.esi_request.models import EsiResponse, FailedEsiResponse
 from pfmsoft.eve_link.settings import get_settings
@@ -43,9 +43,6 @@ logger = logging.getLogger(__name__)
 LOG_LEVEL = logging.WARNING
 
 app = typer.Typer(no_args_is_help=True)
-
-
-# FIXME Use pydantic, use clihelper for output.
 
 
 @dataclass(slots=True, kw_only=True)
@@ -165,26 +162,25 @@ def main(
     else:
         messenger = Console(stderr=True)
 
-    ######################
-    # Create an EsiRequest
-    ######################
-    esi_request = EsiRequest(
-        request_id=uuid4(),
-        operation_id="GetMarketsRegionIdOrders",
-        path_parameters={"region_id": region_id},
-        query_parameters={"order_type": "all"},
-    )
-
     ###################################
     # Fetch the response and process it
     ###################################
     settings = get_settings()
     simple_requests = SimpleRequests(settings=settings)
     esi_schema = simple_requests.get_schema()
-    response = asyncio.run(
-        simple_requests.make_request(esi_request=esi_request, schema=esi_schema)
-    )
+    esi_link = simple_requests.esi_link_factory()
+
+    async def fetch() -> EsiResponse | FailedEsiResponse:
+        async with esi_link:
+            return await fetch_market_orders(
+                esi_link=esi_link,
+                esi_schema=esi_schema,
+                region_id=region_id,
+            )
+
+    response = asyncio.run(fetch())
     response = _check_failed_response(esi_response=response)
+    response_status_message(esi_response=response, messenger=messenger)
     processed_response = _process_response(esi_response=response)
     if output_directory == Path("-"):
         filepath = Path("-")
@@ -207,6 +203,17 @@ def main(
 #############################################################################
 # These functions should be edited to be appropriate for the specific script.
 #############################################################################
+async def fetch_market_orders(
+    esi_link: EsiLink, esi_schema: EsiSchema, *, region_id: int
+) -> EsiResponse | FailedEsiResponse:
+    """Fetches market orders for a given region ID from the EVE Online API."""
+    esi_request = EsiRequest(
+        request_id=uuid4(),
+        operation_id="GetMarketsRegionIdOrders",
+        path_parameters={"region_id": region_id},
+        query_parameters={"order_type": "all"},
+    )
+    return await esi_link.make_request(esi_request=esi_request, schema=esi_schema)
 
 
 def _generate_filename(given_filename: str | None, response: EsiResponse) -> str:
@@ -256,6 +263,19 @@ def _check_failed_response(
             f"error messages: {esi_response.failed_response.error_messages}"
         )
     return esi_response
+
+
+def response_status_message(esi_response: EsiResponse, messenger: Console) -> None:
+    """Prints a status message about the ESI response."""
+    if esi_response.expires_at_instant is None:
+        messenger.print(
+            f"Response from {esi_response.esi_request.operation_id} has no expiration time."
+        )
+    else:
+        messenger.print(
+            f"Response from {esi_response.esi_request.operation_id} expires at "
+            f"{esi_response.expires_at_instant}, in {(esi_response.expires_at_instant - Instant.now()).format_iso()}."
+        )
 
 
 if __name__ == "__main__":

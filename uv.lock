@@ -462,6 +462,7 @@ version = "0.4.5"
 source = { editable = "." }
 dependencies = [
     { name = "httpx2" },
+    { name = "jinja2" },
     { name = "mdformat" },
     { name = "mdformat-gfm" },
     { name = "pfmsoft-api-request" },
@@ -487,6 +488,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx2", specifier = ">=2.5.0" },
+    { name = "jinja2", specifier = ">=3.1.6" },
     { name = "mdformat", specifier = ">=1.0.0" },
     { name = "mdformat-gfm", specifier = ">=1.0.0" },
     { name = "pfmsoft-api-request", specifier = ">=0.1.3" },

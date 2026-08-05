@@ -33,6 +33,11 @@
     },
     "editor.defaultFormatter": "charliermarsh.ruff",
   },
+  "[markdown]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
   "insertDateString.format": "iso",
   "python.analysis.extraPaths": [
     "./src"

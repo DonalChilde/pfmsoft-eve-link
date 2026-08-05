@@ -34,7 +34,7 @@ from pydantic import RootModel
 from rich.console import Console
 from whenever import Instant
 
-from pfmsoft.eve_link import EsiRequest, SimpleRequests
+from pfmsoft.eve_link import EsiLink, EsiRequest, EsiSchema, SimpleRequests
 from pfmsoft.eve_link.cli.helpers import output_to_stdout_or_file
 from pfmsoft.eve_link.esi_request.models import (
     EsiRequestGroup,
@@ -147,13 +147,6 @@ def main(
     else:
         messenger = Console(stderr=True)
 
-    ######################
-    # Create an EsiRequest
-    ######################
-    market_groups_request = EsiRequest(
-        request_id=uuid4(),
-        operation_id="GetMarketsGroups",
-    )
     ###################################
     # Fetch the response and process it
     ###################################
@@ -162,23 +155,22 @@ def main(
     esi_schema = simple_requests.get_schema(compatibility_date=None)
     esi_link = simple_requests.esi_link_factory()
 
-    async def fetch_market_groups():
+    async def fetch():
         async with esi_link:
-            market_group_ids_response = await esi_link.make_request(
-                esi_request=market_groups_request, schema=esi_schema
+            market_group_ids_response = await fetch_market_groups(
+                esi_link=esi_link, esi_schema=esi_schema
             )
             checked_response = _check_failed_response(
                 esi_response=market_group_ids_response
             )
-            _response_status_message(esi_response=checked_response, messenger=messenger)
+            response_status_message(esi_response=checked_response, messenger=messenger)
             market_group_ids = MarketGroupIdsRoot(
                 root=checked_response.response_data
             ).root
-            esi_request_group = _create_request_group_for_market_groups(
-                market_group_ids=market_group_ids
-            )
-            market_details_response = await esi_link.make_requests(
-                esi_requests=esi_request_group, schema=esi_schema
+            market_details_response = await fetch_market_groups_details(
+                esi_link=esi_link,
+                esi_schema=esi_schema,
+                market_group_ids=market_group_ids,
             )
             checked_response_group = _check_failed_response_group(
                 esi_response_group=market_details_response
@@ -192,7 +184,7 @@ def main(
                 checked_response.expires_at_instant,
             )
 
-    market_group_details, timestamp, expires_at = asyncio.run(fetch_market_groups())
+    market_group_details, timestamp, expires_at = asyncio.run(fetch())
     processed_groups = _process_market_group_details(
         market_group_details=market_group_details,
         timestamp=timestamp,
@@ -264,21 +256,6 @@ def _process_market_group_details(
     )
 
 
-def _create_request_group_for_market_groups(
-    market_group_ids: list[int],
-) -> EsiRequestGroup:
-    """Creates an EsiRequestGroup for fetching market group details for the given market group IDs."""
-    requests = [
-        EsiRequest(
-            request_id=uuid4(),
-            operation_id="GetMarketsGroupsMarketGroupId",
-            path_parameters={"market_group_id": market_group_id},
-        )
-        for market_group_id in market_group_ids
-    ]
-    return EsiRequestGroup(requests={r.request_id: r for r in requests})
-
-
 def _collect_market_group_details(
     esi_response_group: EsiResponseGroup,
 ) -> dict[int, MarketGroupDetail]:
@@ -296,6 +273,35 @@ def _generate_filename(given_filename: str | None, received_at: Instant) -> str:
         return given_filename
 
     return f"Market_Groups_Processed_{received_at.timestamp_nanos()}.json"
+
+
+async def fetch_market_groups(
+    esi_link: EsiLink, esi_schema: EsiSchema
+) -> EsiResponse | FailedEsiResponse:
+    """Fetches the list of market group IDs from the EVE Online API."""
+    market_groups_request = EsiRequest(
+        request_id=uuid4(),
+        operation_id="GetMarketsGroups",
+    )
+    return await esi_link.make_request(
+        esi_request=market_groups_request, schema=esi_schema
+    )
+
+
+async def fetch_market_groups_details(
+    esi_link: EsiLink, esi_schema: EsiSchema, *, market_group_ids: list[int]
+) -> EsiResponseGroup:
+    """Fetches the details for each market group ID from the EVE Online API."""
+    requests = [
+        EsiRequest(
+            request_id=uuid4(),
+            operation_id="GetMarketsGroupsMarketGroupId",
+            path_parameters={"market_group_id": market_group_id},
+        )
+        for market_group_id in market_group_ids
+    ]
+    request_group = EsiRequestGroup(requests={r.request_id: r for r in requests})
+    return await esi_link.make_requests(esi_requests=request_group, schema=esi_schema)
 
 
 ################################################################
@@ -328,12 +334,17 @@ def _check_failed_response(
     return esi_response
 
 
-def _response_status_message(esi_response: EsiResponse, messenger: Console) -> None:
+def response_status_message(esi_response: EsiResponse, messenger: Console) -> None:
     """Prints a status message about the ESI response."""
-    messenger.print(
-        f"Response from {esi_response.esi_request.operation_id} expires at "
-        f"{esi_response.expires_at_instant}"
-    )
+    if esi_response.expires_at_instant is None:
+        messenger.print(
+            f"Response from {esi_response.esi_request.operation_id} has no expiration time."
+        )
+    else:
+        messenger.print(
+            f"Response from {esi_response.esi_request.operation_id} expires at "
+            f"{esi_response.expires_at_instant}, in {(esi_response.expires_at_instant - Instant.now()).format_iso()}."
+        )
 
 
 if __name__ == "__main__":
