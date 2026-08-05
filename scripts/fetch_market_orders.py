@@ -6,6 +6,8 @@
 # ]
 # [tool.uv]
 # exclude-newer-package = {pfmsoft-eve-link = false}
+# [tool.uv.sources]
+# pfmsoft-eve-link = { git = "https://github.com/DonalChilde/pfmsoft-eve-link.git", branch = "dev" }
 # ///
 
 ####################################################################################################
@@ -22,16 +24,18 @@
 
 import asyncio
 import logging
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Annotated, Any, TypedDict, cast
+from typing import Annotated, cast
 from uuid import uuid4
 
 import typer
-from pfmsoft.eve_snippets import json_io, save_text_file
+from pydantic import RootModel
 from rich.console import Console
 from whenever import Instant
 
 from pfmsoft.eve_link import EsiRequest, SimpleRequests
+from pfmsoft.eve_link.cli.helpers import output_to_stdout_or_file
 from pfmsoft.eve_link.esi_request.models import EsiResponse, FailedEsiResponse
 from pfmsoft.eve_link.settings import get_settings
 
@@ -41,12 +45,11 @@ LOG_LEVEL = logging.WARNING
 app = typer.Typer(no_args_is_help=True)
 
 
-class DividedOrders(TypedDict):
-    buy_orders: list[GetMarketsRegionIdOrdersDetail]
-    sell_orders: list[GetMarketsRegionIdOrdersDetail]
+# FIXME Use pydantic, use clihelper for output.
 
 
-class GetMarketsRegionIdOrdersDetail(TypedDict):
+@dataclass(slots=True, kw_only=True)
+class GetMarketsRegionIdOrdersDetail:
     """TypedDict for market orders response."""
 
     duration: int
@@ -63,19 +66,42 @@ class GetMarketsRegionIdOrdersDetail(TypedDict):
     volume_total: int
 
 
+RegionalOrdersRoot = RootModel[list[GetMarketsRegionIdOrdersDetail]]
+
+
+@dataclass(slots=True, kw_only=True)
+class DividedOrders:
+    buy_orders: list[GetMarketsRegionIdOrdersDetail] = field(
+        default_factory=list[GetMarketsRegionIdOrdersDetail]
+    )
+    sell_orders: list[GetMarketsRegionIdOrdersDetail] = field(
+        default_factory=list[GetMarketsRegionIdOrdersDetail]
+    )
+
+
 TypeId = int
 OrdersDict = dict[TypeId, DividedOrders]  # type_id -> DividedOrders
 
 
-class MarketOrdersResponse(TypedDict):
+@dataclass(slots=True, kw_only=True)
+class MarketOrdersResponse:
     region_id: int
     """The region ID for which the market orders were fetched."""
-    timestamp_iso: str
+    received_at: Instant
     """The timestamp when the market orders were fetched."""
-    expires_at: str | None
+    expires_at: Instant | None
     """The timestamp when the market orders will expire, if provided by the ESI response."""
     orders: OrdersDict
     """The market orders divided by type ID and buy/sell orders."""
+
+    def serialize(self, indent: int | None = 2) -> str:
+        """Serializes the MarketOrdersResponse to a JSON string."""
+        return MarketOrdersResponseRoot(root=self).model_dump_json(
+            indent=indent,
+        )
+
+
+MarketOrdersResponseRoot = RootModel[MarketOrdersResponse]
 
 
 @app.command()
@@ -160,16 +186,19 @@ def main(
     )
     response = _check_failed_response(esi_response=response)
     processed_response = _process_response(esi_response=response)
+    if output_directory == Path("-"):
+        filepath = Path("-")
+    else:
+        if filename is None:
+            filename = _generate_filename(given_filename=filename, response=response)
+        filepath = output_directory / filename
 
     #######################################
     # Output the result to a file or stdout
     #######################################
-    _output_result(
-        response=response,
-        data=processed_response,
-        output_directory=output_directory,
-        filename=filename,
-        indent=indent,
+    output_to_stdout_or_file(
+        data_string=processed_response.serialize(indent=indent),
+        filepath=filepath,
         overwrite=overwrite,
         messenger=messenger,
     )
@@ -180,42 +209,37 @@ def main(
 #############################################################################
 
 
-def _generate_default_filename(esi_response: EsiResponse) -> str:
+def _generate_filename(given_filename: str | None, response: EsiResponse) -> str:
     """Generates a default filename for the market orders response based on the region ID and timestamp."""
-    region_id = cast(int, esi_response.esi_request.path_parameters["region_id"])
-    timestamp = esi_response.response.metadata.received_at.timestamp_nanos()
+    if given_filename is not None:
+        return given_filename
+    region_id = cast(int, response.esi_request.path_parameters["region_id"])
+    timestamp = response.received_at_instant.timestamp_nanos()
     return f"GetMarketsRegionIdOrders_{region_id}_{timestamp}.json"
 
 
 def _process_response(esi_response: EsiResponse) -> MarketOrdersResponse:
     """Processes the ESI response and returns a structured MarketOrdersResponse."""
-    if not isinstance(esi_response.response_data, list):
-        raise ValueError(
-            f"Expected a list of market orders, but got: {type(esi_response.response_data)}"
-        )
     orders_by_type: dict[int, DividedOrders] = {}
     region_id = cast(int, esi_response.esi_request.path_parameters["region_id"])
-    data = cast(list[GetMarketsRegionIdOrdersDetail], esi_response.response_data)  # type: ignore
-    for order in data:
-        type_id = order["type_id"]
+    regional_orders = RegionalOrdersRoot(root=esi_response.response_data).root  # type: ignore
+    for order in regional_orders:
+        type_id = order.type_id
         if type_id not in orders_by_type:
-            orders_by_type[type_id] = {"buy_orders": [], "sell_orders": []}
-        if order["is_buy_order"]:
-            orders_by_type[type_id]["buy_orders"].append(order)
+            orders_by_type[type_id] = DividedOrders()
+        if order.is_buy_order:
+            orders_by_type[type_id].buy_orders.append(order)
         else:
-            orders_by_type[type_id]["sell_orders"].append(order)
-    timestamp_iso = esi_response.response.metadata.received_at.format_iso()
-    expires_at = (
-        Instant.from_timestamp(esi_response.response.metadata.expires_at).format_iso()
-        if esi_response.response.metadata.expires_at
-        else None
+            orders_by_type[type_id].sell_orders.append(order)
+    received_at = esi_response.received_at_instant
+    expires_at = esi_response.expires_at_instant
+
+    return MarketOrdersResponse(
+        region_id=region_id,
+        received_at=received_at,
+        expires_at=expires_at,
+        orders=orders_by_type,
     )
-    return {
-        "region_id": region_id,
-        "timestamp_iso": timestamp_iso,
-        "expires_at": expires_at,
-        "orders": orders_by_type,
-    }
 
 
 ################################################################
@@ -232,39 +256,6 @@ def _check_failed_response(
             f"error messages: {esi_response.failed_response.error_messages}"
         )
     return esi_response
-
-
-def _output_result(
-    response: EsiResponse,
-    data: Any,
-    output_directory: Path,
-    filename: str | None,
-    indent: int,
-    overwrite: bool,
-    messenger: Console,
-) -> None:
-    """Outputs the data to a file or stdout."""
-    if output_directory != Path("-"):
-        if filename is None:
-            filename = _generate_default_filename(esi_response=response)
-        try:
-            output_path = save_text_file(
-                text=json_io.json_dumps(data, indent=indent),
-                directory=output_directory,
-                filename=filename,
-                overwrite=overwrite,
-            )
-        except FileExistsError as e:
-            messenger.print(
-                f"File {output_directory / filename} already exists. Use --overwrite to overwrite it."
-            )
-            raise typer.Exit(code=1) from e
-        messenger.print(
-            f"Response from {response.esi_request.operation_id} expires at "
-            f"{response.expires_at_instant}, saved to {output_path}"
-        )
-        raise typer.Exit()
-    print(json_io.json_dumps(data, indent=indent))
 
 
 if __name__ == "__main__":

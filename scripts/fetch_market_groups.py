@@ -6,6 +6,8 @@
 # ]
 # [tool.uv]
 # exclude-newer-package = {pfmsoft-eve-link = false}
+# [tool.uv.sources]
+# pfmsoft-eve-link = { git = "https://github.com/DonalChilde/pfmsoft-eve-link.git", branch = "dev" }
 # ///
 
 ####################################################################################################
@@ -22,12 +24,13 @@
 
 import asyncio
 import logging
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Annotated, TypedDict, cast
+from typing import Annotated
 from uuid import uuid4
 
 import typer
-from pfmsoft.eve_snippets import json_io
+from pydantic import RootModel
 from rich.console import Console
 from whenever import Instant
 
@@ -46,28 +49,45 @@ LOG_LEVEL = logging.WARNING
 
 app = typer.Typer(no_args_is_help=True)
 
-# FIXME validate the responses with pydantic.
 
-
-class MarketGroupDetails(TypedDict):
+@dataclass(slots=True, kw_only=True)
+class MarketGroupDetail:
     """TypedDict for market group details response."""
 
     market_group_id: int
     name: str
-    description: str | None
-    parent_group_id: int | None
-    types: list[int]
+    description: str | None = None
+    parent_group_id: int | None = None
+    types: list[int] = field(default_factory=list[int])
 
 
-class MarketGroupDetailsResponse(TypedDict):
-    timestamp_iso: str | None
+MarketGroupDetailsRoot = RootModel[MarketGroupDetail]
+MarketGroupIdsRoot = RootModel[list[int]]
+
+
+@dataclass(slots=True, kw_only=True)
+class MarketGroupDetailsResponse:
+    received_at: Instant
     """The timestamp when the market orders were fetched."""
-    expires_at: str | None
+    expires_at: Instant | None
     """The timestamp when the market orders will expire, if provided by the ESI response."""
-    market_groups: dict[int, MarketGroupDetails]
+    market_groups: dict[int, MarketGroupDetail] = field(
+        default_factory=dict[int, MarketGroupDetail]
+    )
     """The market group details keyed by market group ID."""
-    path_str: dict[int, tuple[str, ...]]
-    path_int: dict[int, tuple[int, ...]]
+    path_str: dict[int, tuple[str, ...]] = field(
+        default_factory=dict[int, tuple[str, ...]]
+    )
+    path_int: dict[int, tuple[int, ...]] = field(
+        default_factory=dict[int, tuple[int, ...]]
+    )
+
+    def serialize(self, indent: int | None = 2) -> str:
+        """Serializes the MarketGroupDetailsResponse to a JSON string."""
+        return MarketGroupDetailsResponseRoot(root=self).model_dump_json(indent=indent)
+
+
+MarketGroupDetailsResponseRoot = RootModel[MarketGroupDetailsResponse]
 
 
 @app.command()
@@ -151,12 +171,9 @@ def main(
                 esi_response=market_group_ids_response
             )
             _response_status_message(esi_response=checked_response, messenger=messenger)
-            market_group_ids = checked_response.response_data
-            if not isinstance(market_group_ids, list):
-                raise ValueError(
-                    f"Expected a list of market group IDs, but got: {market_group_ids}"
-                )
-            market_group_ids = cast(list[int], market_group_ids)
+            market_group_ids = MarketGroupIdsRoot(
+                root=checked_response.response_data
+            ).root
             esi_request_group = _create_request_group_for_market_groups(
                 market_group_ids=market_group_ids
             )
@@ -178,10 +195,10 @@ def main(
     market_group_details, timestamp, expires_at = asyncio.run(fetch_market_groups())
     processed_groups = _process_market_group_details(
         market_group_details=market_group_details,
-        timestamp=timestamp.format_iso(),
-        expires_at=expires_at.format_iso() if expires_at is not None else "",
+        timestamp=timestamp,
+        expires_at=expires_at,
     )
-    data_string = json_io.json_dumps(processed_groups, indent=indent)
+    data_string = processed_groups.serialize(indent=indent)
     if output_directory == Path("-"):
         filepath = Path("-")
     else:
@@ -204,9 +221,9 @@ def main(
 
 
 def _process_market_group_details(
-    market_group_details: dict[int, MarketGroupDetails],
-    timestamp: str = "",
-    expires_at: str = "",
+    market_group_details: dict[int, MarketGroupDetail],
+    timestamp: Instant,
+    expires_at: Instant | None,
 ) -> MarketGroupDetailsResponse:
     """Processes the market group details and returns a structured MarketGroupDetailsResponse."""
     path_str: dict[int, tuple[str, ...]] = {}
@@ -216,21 +233,21 @@ def _process_market_group_details(
         if market_group_id in path_str:
             return path_str[market_group_id]
         market_group = market_group_details[market_group_id]
-        if market_group["parent_group_id"] is None:
-            path_str[market_group_id] = (market_group["name"],)
+        if market_group.parent_group_id is None:
+            path_str[market_group_id] = (market_group.name,)
         else:
-            parent_path_str = build_path_str(market_group["parent_group_id"])
-            path_str[market_group_id] = parent_path_str + (market_group["name"],)
+            parent_path_str = build_path_str(market_group.parent_group_id)
+            path_str[market_group_id] = parent_path_str + (market_group.name,)
         return path_str[market_group_id]
 
     def build_path_int(market_group_id: int) -> tuple[int, ...]:
         if market_group_id in path_int:
             return path_int[market_group_id]
         market_group = market_group_details[market_group_id]
-        if market_group["parent_group_id"] is None:
+        if market_group.parent_group_id is None:
             path_int[market_group_id] = (market_group_id,)
         else:
-            parent_path_int = build_path_int(market_group["parent_group_id"])
+            parent_path_int = build_path_int(market_group.parent_group_id)
             path_int[market_group_id] = parent_path_int + (market_group_id,)
         return path_int[market_group_id]
 
@@ -239,7 +256,7 @@ def _process_market_group_details(
         build_path_int(mg_id)
 
     return MarketGroupDetailsResponse(
-        timestamp_iso=timestamp,
+        received_at=timestamp,
         expires_at=expires_at,
         market_groups=market_group_details,
         path_str=path_str,
@@ -264,13 +281,12 @@ def _create_request_group_for_market_groups(
 
 def _collect_market_group_details(
     esi_response_group: EsiResponseGroup,
-) -> dict[int, MarketGroupDetails]:
+) -> dict[int, MarketGroupDetail]:
     """Collects market group details from the ESI response group and returns a dictionary of market group details."""
-    market_group_details: dict[int, MarketGroupDetails] = {}
+    market_group_details: dict[int, MarketGroupDetail] = {}
     for _, response in esi_response_group.successful_responses.items():
-        market_group_id = cast(int, response.response.json["market_group_id"])
-        market_group_detail = cast(MarketGroupDetails, response.response.json)
-        market_group_details[market_group_id] = market_group_detail
+        market_group_detail = MarketGroupDetailsRoot(root=response.response.json).root
+        market_group_details[market_group_detail.market_group_id] = market_group_detail
     return market_group_details
 
 
