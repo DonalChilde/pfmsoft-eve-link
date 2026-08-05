@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from pfmsoft.eve_snippets import json_io, save_text_file
+from pfmsoft.eve_snippets import json_io
 from rich.console import Console
 
 from pfmsoft.eve_link.cli.helpers import (
@@ -46,20 +46,19 @@ def generate_request_builders_command(
             help="Compatibility date (YYYY-MM-DD) of cached ESI schema to use.",
         ),
     ] = None,
-    file_out: Annotated[
+    directory_out: Annotated[
         Path,
         typer.Option(
             "--to",
-            help="Output Python file path. Use - for stdout.",
+            help="Output directory path for the generated package.",
             allow_dash=True,
-            dir_okay=False,
         ),
     ] = Path("-"),
-    module_name: Annotated[
+    package_name: Annotated[
         str,
         typer.Option(
-            "--module-name",
-            help="Python module name to use in the generated file.",
+            "--package-name",
+            help="Python package name to use in the generated output.",
         ),
     ] = "generated_requests",
     overwrite: Annotated[
@@ -77,7 +76,7 @@ def generate_request_builders_command(
         ),
     ] = False,
 ) -> None:
-    """Generate Python request builder functions from an ESI schema."""
+    """Generate Python request builder functions from an ESI schema package."""
     if quiet:
         messenger = Console(stderr=True, quiet=True)
     else:
@@ -108,20 +107,42 @@ def generate_request_builders_command(
     else:
         esi_schema = simple_requests.get_schema(compatibility_date=compatibility_date)
 
-    source = generate_request_builders(schema=esi_schema, module_name=module_name)
-    if file_out == Path("-"):
-        print(source)
-        raise typer.Exit()
+    generated_package = generate_request_builders(
+        schema=esi_schema,
+        package_name=package_name,
+    )
+    if directory_out == Path("-"):
+        messenger.print(
+            "[red]Error: Package output requires a directory path for --to.[/red]"
+        )
+        raise typer.Exit(code=1)
+
+    package_root = directory_out
+    if directory_out.suffix == ".py":
+        package_root = directory_out.parent / directory_out.stem
 
     try:
-        output_path = save_text_file(
-            text=source,
-            directory=file_out.parent,
-            filename=file_out.name,
-            overwrite=overwrite,
-        )
+        if package_root.exists() and not package_root.is_dir():
+            raise ValueError(f"Output path is not a directory: {package_root}")
+
+        existing_files = [
+            package_root / relative_path
+            for relative_path in generated_package.files
+            if (package_root / relative_path).exists()
+        ]
+        if existing_files and not overwrite:
+            file_list = ", ".join(str(path.name) for path in sorted(existing_files))
+            raise FileExistsError(
+                f"File(s) already exist in output package: {file_list}. "
+                "Use --overwrite to replace them."
+            )
+
+        package_root.mkdir(parents=True, exist_ok=True)
+        for relative_path, source in generated_package.files.items():
+            output_file = package_root / relative_path
+            output_file.write_text(source, encoding="utf-8")
     except Exception as e:
-        messenger.print(f"[red]Error: Failed to save output file - {e}[/red]")
+        messenger.print(f"[red]Error: Failed to save output package - {e}[/red]")
         raise typer.Exit(code=1) from e
 
-    messenger.print(f"[green]Request builders saved to {output_path}[/green]")
+    messenger.print(f"[green]Request builders saved to {package_root}[/green]")

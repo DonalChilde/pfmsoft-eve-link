@@ -54,10 +54,12 @@ def load_esi_schema(
                 timestamp=timestamp_int,
             )
         else:
-            return EsiSchemaRoot.model_validate({
-                "dereferenced_schema": schema_dict,
-                "timestamp": timestamp_int,
-            }).root
+            return EsiSchemaRoot.model_validate(
+                {
+                    "dereferenced_schema": schema_dict,
+                    "timestamp": timestamp_int,
+                }
+            ).root
     if is_esi_schema_td(schema_dict):
         # EsiSchemaTD is expected to be dereferenced, so we can just pass it through.
         return EsiSchemaRoot.model_validate(schema_dict).root

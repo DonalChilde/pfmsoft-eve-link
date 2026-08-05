@@ -51,15 +51,29 @@ def test_generate_request_builders_renders_grouped_functions() -> None:
         }
     )
 
-    source = generate_request_builders(schema=schema, module_name="generated_requests")
+    generated = generate_request_builders(
+        schema=schema,
+        package_name="generated_requests",
+    )
+    init_source = generated.files["__init__.py"]
+    market_source = generated.files["market.py"]
 
-    assert 'COMPATIBILITY_DATE: str = "2026-06-09"' in source
-    assert "def get_markets_groups(" in source
-    assert '"""Get a list of market groups.' in source
-    assert "name: str | None = None" in source
-    assert "accept_language: str | None = ACCEPT_LANGUAGE" in source
-    assert "market_group_id: int" in source
-    assert "page" not in source
+    assert 'X_COMPATIBILITY_DATE: str = "2026-06-09"' in init_source
+    assert 'ACCEPT_LANGUAGE: LangType = "en"' in init_source
+    assert 'X_TENANT: str = "tranquility"' in init_source
+    assert "from . import market" in init_source
+    assert "__all__ = [" in init_source
+    assert '"market",' in init_source
+    assert "get_markets_groups" not in init_source
+    assert (
+        "from . import ACCEPT_LANGUAGE, X_COMPATIBILITY_DATE, X_TENANT" in market_source
+    )
+    assert "def get_markets_groups(" in market_source
+    assert '"""Get a list of market groups.' in market_source
+    assert "name: str | None = None" in market_source
+    assert "accept_language: str | None = ACCEPT_LANGUAGE" in market_source
+    assert "market_group_id: int" in market_source
+    assert "page" not in market_source
 
 
 def test_generate_request_builders_uses_constant_defaults_for_known_headers() -> None:
@@ -91,9 +105,13 @@ def test_generate_request_builders_uses_constant_defaults_for_known_headers() ->
         }
     )
 
-    source = generate_request_builders(schema=schema, module_name="generated_requests")
+    generated = generate_request_builders(
+        schema=schema,
+        package_name="generated_requests",
+    )
+    market_source = generated.files["market.py"]
 
-    assert "x_compatibility_date: str | None = X_COMPATIBILITY_DATE" in source
+    assert "x_compatibility_date: str | None = X_COMPATIBILITY_DATE" in market_source
 
 
 def test_generate_request_builders_builds_parameter_dicts_for_request() -> None:
@@ -137,14 +155,18 @@ def test_generate_request_builders_builds_parameter_dicts_for_request() -> None:
         }
     )
 
-    source = generate_request_builders(schema=schema, module_name="generated_requests")
+    generated = generate_request_builders(
+        schema=schema,
+        package_name="generated_requests",
+    )
+    market_source = generated.files["market.py"]
 
-    assert 'header_parameters["Accept-Language"] = accept_language' in source
-    assert 'path_parameters["market_group_id"] = market_group_id' in source
-    assert 'query_parameters["name"] = name' in source
-    assert "header_parameters=header_parameters" in source
-    assert "path_parameters=path_parameters" in source
-    assert "query_parameters=query_parameters" in source
+    assert 'header_parameters["Accept-Language"] = accept_language' in market_source
+    assert 'path_parameters["market_group_id"] = market_group_id' in market_source
+    assert 'query_parameters["name"] = name' in market_source
+    assert "header_parameters=header_parameters" in market_source
+    assert "path_parameters=path_parameters" in market_source
+    assert "query_parameters=query_parameters" in market_source
 
 
 def test_generate_request_builders_respects_excluded_parameter_names() -> None:
@@ -188,15 +210,16 @@ def test_generate_request_builders_respects_excluded_parameter_names() -> None:
         }
     )
 
-    source = generate_request_builders(
+    generated = generate_request_builders(
         schema=schema,
-        module_name="generated_requests",
+        package_name="generated_requests",
         exclude=frozenset({"name", "Accept-Language"}),
     )
+    market_source = generated.files["market.py"]
 
-    assert "name: str | None = None" not in source
-    assert "accept_language" not in source
-    assert "market_group_id: int" in source
+    assert "name: str | None = None" not in market_source
+    assert "accept_language" not in market_source
+    assert "market_group_id: int" in market_source
 
 
 def test_generate_request_builders_only_passes_request_body_when_needed() -> None:
@@ -232,18 +255,22 @@ def test_generate_request_builders_only_passes_request_body_when_needed() -> Non
         }
     )
 
-    source = generate_request_builders(schema=schema, module_name="generated_requests")
+    generated = generate_request_builders(
+        schema=schema,
+        package_name="generated_requests",
+    )
+    market_source = generated.files["market.py"]
 
-    assert "def get_markets_groups(" in source
+    assert "def get_markets_groups(" in market_source
     assert (
         "request_body"
-        not in source.split("def get_markets_groups(", 1)[1].split(
+        not in market_source.split("def get_markets_groups(", 1)[1].split(
             "def post_markets_groups(", 1
         )[0]
     )
-    assert "request_body: Any" in source
-    assert "request_body: Any | None = None" not in source
-    assert "request_body=request_body" in source
+    assert "request_body: Any" in market_source
+    assert "request_body: Any | None = None" not in market_source
+    assert "request_body=request_body" in market_source
 
 
 def test_generate_request_builders_requires_auth_arguments_for_authenticated_ops() -> (
@@ -271,9 +298,13 @@ def test_generate_request_builders_requires_auth_arguments_for_authenticated_ops
         }
     )
 
-    source = generate_request_builders(schema=schema, module_name="generated_requests")
+    generated = generate_request_builders(
+        schema=schema,
+        package_name="generated_requests",
+    )
+    market_source = generated.files["market.py"]
 
-    assert "auth_character_id: int," in source
-    assert "auth_credential_id: UUID," in source
-    assert "auth_character_id=auth_character_id" in source
-    assert "auth_credential_id=auth_credential_id" in source
+    assert "auth_character_id: int," in market_source
+    assert "auth_credential_id: UUID," in market_source
+    assert "auth_character_id=auth_character_id" in market_source
+    assert "auth_credential_id=auth_credential_id" in market_source

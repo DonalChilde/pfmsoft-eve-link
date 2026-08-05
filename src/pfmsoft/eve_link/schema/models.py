@@ -103,8 +103,7 @@ class SchemaOperation:
     def responses_200(self) -> dict[str, Any]:
         """Extract the response schema from the operation object, if present."""
         success_responses = (
-            self.operation_schema
-            .get("responses", {})
+            self.operation_schema.get("responses", {})
             .get("200", {})
             .get("content", {})
             .get("application/json", {})
@@ -314,8 +313,7 @@ class EsiSchema:
     def content_languages(self) -> set[str]:
         """Get the content languages supported by the ESI API from the schema."""
         return set(
-            self.dereferenced_schema
-            .get("components", {})
+            self.dereferenced_schema.get("components", {})
             .get("headers", {})
             .get("ContentLanguage", {})
             .get("schema", {})

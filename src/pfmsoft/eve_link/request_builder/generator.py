@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -42,39 +43,49 @@ class TagContext:
     """Template context for a group of generated request builders."""
 
     name: str
+    module_name: str
     operations: list[OperationContext] = field(default_factory=list[OperationContext])
 
 
 @dataclass(slots=True, kw_only=True)
 class TemplateContext:
-    """Top-level template context for a generated module."""
+    """Top-level template context for generated output."""
 
     module_name: str
     compatibility_date: str
     tags: list[TagContext] = field(default_factory=list[TagContext])
 
 
+@dataclass(slots=True, kw_only=True)
+class GeneratedPackage:
+    """Generated package files keyed by path relative to the package root."""
+
+    package_name: str
+    files: dict[str, str] = field(default_factory=dict[str, str])
+
+
 def generate_request_builders(
     *,
     schema: EsiSchema,
-    module_name: str,
+    package_name: str = "request_factory",
     exclude: frozenset[str] | None = EXCLUDED,
-) -> str:
-    """Render a request builder module for the provided schema.
+) -> GeneratedPackage:
+    """Render request builder package files for the provided schema.
 
     Args:
         schema: The ESI schema used to derive the request builders.
-        module_name: The Python module name for the generated module.
+        package_name: The Python package name for the generated package.
         exclude: Parameter names to omit from the generated function signatures.
 
     Returns:
-        The rendered Python source code.
+        Generated package files keyed by relative path.
     """
     env = Environment(
         loader=PackageLoader("pfmsoft.eve_link.request_builder"),
         autoescape=select_autoescape(enabled_extensions=("html", "xml")),
     )
-    template = env.get_template("module.py.j2")
+    init_template = env.get_template("package_init.py.j2")
+    tag_template = env.get_template("tag_module.py.j2")
 
     operations_by_tag: dict[str, list[OperationContext]] = {}
     for operation_id, operation in schema.operations.items():
@@ -96,15 +107,32 @@ def generate_request_builders(
     for operations in operations_by_tag.values():
         operations.sort(key=lambda item: item.function_name)
 
+    tags: list[TagContext] = []
+    used_module_names: set[str] = set()
+    for tag, operations in sorted(operations_by_tag.items()):
+        module_name_for_tag = _to_unique_module_name(tag, used=used_module_names)
+        tags.append(
+            TagContext(
+                name=tag,
+                module_name=module_name_for_tag,
+                operations=operations,
+            )
+        )
+
     context = TemplateContext(
-        module_name=module_name,
+        module_name=package_name,
         compatibility_date=schema.compatibility_date,
-        tags=[
-            TagContext(name=tag, operations=ops)
-            for tag, ops in sorted(operations_by_tag.items())
-        ],
+        tags=tags,
     )
-    return template.render(asdict(context))
+    rendered_context = asdict(context)
+
+    files: dict[str, str] = {
+        "__init__.py": init_template.render(rendered_context),
+    }
+    for tag in context.tags:
+        files[f"{tag.module_name}.py"] = tag_template.render(asdict(tag))
+
+    return GeneratedPackage(package_name=package_name, files=files)
 
 
 def _to_snake_case(value: str) -> str:
@@ -130,6 +158,20 @@ def _sanitize_description(value: str) -> str:
     if normalized[-1] not in {".", "!", "?"}:
         return f"{normalized}."
     return normalized
+
+
+def _to_unique_module_name(tag: str, *, used: set[str]) -> str:
+    """Convert a tag value to a unique snake_case Python module name."""
+    normalized = re.sub(r"[^a-z0-9]+", "_", tag.strip().lower()).strip("_")
+    base_name = normalized or "general"
+
+    module_name = base_name
+    suffix = 2
+    while module_name in used:
+        module_name = f"{base_name}_{suffix}"
+        suffix += 1
+    used.add(module_name)
+    return module_name
 
 
 def _build_parameters(

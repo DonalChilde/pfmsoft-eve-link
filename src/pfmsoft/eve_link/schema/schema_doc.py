@@ -99,10 +99,12 @@ def _render_summary_table(operation: SchemaOperation) -> str:
     table.add_row(["Operation ID", operation.operation_id])
     table.add_row(["Method", str(operation.method)])
     table.add_row(["Path", operation.path])
-    table.add_row([
-        "Authorization Required",
-        "Yes" if operation.is_authentication_required else "No",
-    ])
+    table.add_row(
+        [
+            "Authorization Required",
+            "Yes" if operation.is_authentication_required else "No",
+        ]
+    )
     table.add_row(["Compatibility Date", compatibility_date])
     table.add_row(["Response Keys", response_keys])
     table.add_row(["Summary", operation.summary or "-"])
@@ -143,13 +145,15 @@ def _render_parameters_table(operation: SchemaOperation) -> str:
         align=[Align.LEFT, Align.LEFT, Align.LEFT, Align.LEFT, Align.LEFT],
     )
     for parameter in parameters:
-        table.add_row([
-            parameter.get("name", "-"),
-            parameter.get("in", "-"),
-            "Yes" if parameter.get("required", False) else "No",
-            _parameter_type(parameter),
-            _parameter_description(parameter),
-        ])
+        table.add_row(
+            [
+                parameter.get("name", "-"),
+                parameter.get("in", "-"),
+                "Yes" if parameter.get("required", False) else "No",
+                _parameter_type(parameter),
+                _parameter_description(parameter),
+            ]
+        )
     return table.render()
 
 

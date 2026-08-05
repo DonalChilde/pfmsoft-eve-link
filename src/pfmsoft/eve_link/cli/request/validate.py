@@ -109,9 +109,9 @@ def validate_requests(
             esi_link.validate_request(request, esi_schema)
             valid_count += 1
         except EsiRequestValidationErrors as e:
-            all_errors.extend([
-                f"request_id={request_id}: {message}" for message in e.errors
-            ])
+            all_errors.extend(
+                [f"request_id={request_id}: {message}" for message in e.errors]
+            )
         except Exception as e:
             all_errors.append(
                 f"request_id={request_id}: Unexpected validation error - {e}"
