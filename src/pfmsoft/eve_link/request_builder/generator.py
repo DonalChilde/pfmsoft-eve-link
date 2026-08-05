@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from pathlib import Path
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, PackageLoader, select_autoescape
 
 from pfmsoft.eve_link.schema.models import EsiSchema
-
-_TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 
 EXCLUDED = frozenset({"page", "If-None-Match", "If-Modified-Since"})
 
@@ -74,7 +71,7 @@ def generate_request_builders(
         The rendered Python source code.
     """
     env = Environment(
-        loader=FileSystemLoader(str(_TEMPLATE_DIR)),
+        loader=PackageLoader("pfmsoft.eve_link.request_builder"),
         autoescape=select_autoescape(enabled_extensions=("html", "xml")),
     )
     template = env.get_template("module.py.j2")
