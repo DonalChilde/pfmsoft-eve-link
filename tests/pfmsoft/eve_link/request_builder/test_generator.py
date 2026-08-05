@@ -164,6 +164,18 @@ def test_generate_request_builders_builds_parameter_dicts_for_request() -> None:
     assert 'header_parameters["Accept-Language"] = accept_language' in market_source
     assert 'path_parameters["market_group_id"] = market_group_id' in market_source
     assert 'query_parameters["name"] = name' in market_source
+    assert (
+        "path_parameters = {k: v for k, v in path_parameters.items() if v is not None}"
+        in market_source
+    )
+    assert (
+        "query_parameters = {k: v for k, v in query_parameters.items() if v is not None}"
+        in market_source
+    )
+    assert (
+        "header_parameters = {k: v for k, v in header_parameters.items() if v is not None}"
+        in market_source
+    )
     assert "header_parameters=header_parameters" in market_source
     assert "path_parameters=path_parameters" in market_source
     assert "query_parameters=query_parameters" in market_source

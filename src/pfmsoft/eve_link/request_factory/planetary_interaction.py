@@ -27,6 +27,11 @@ def get_characters_character_id_planets(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetCharactersCharacterIdPlanets",
@@ -60,6 +65,11 @@ def get_characters_character_id_planets_planet_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetCharactersCharacterIdPlanetsPlanetId",
@@ -91,6 +101,11 @@ def get_corporations_corporation_id_customs_offices(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetCorporationsCorporationIdCustomsOffices",
@@ -119,6 +134,11 @@ def get_universe_schematics_schematic_id(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),

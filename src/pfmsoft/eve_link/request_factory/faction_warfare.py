@@ -27,6 +27,11 @@ def get_characters_character_id_fw_stats(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetCharactersCharacterIdFwStats",
@@ -58,6 +63,11 @@ def get_corporations_corporation_id_fw_stats(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetCorporationsCorporationIdFwStats",
@@ -85,6 +95,11 @@ def get_fw_leaderboards(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetFwLeaderboards",
@@ -109,6 +124,11 @@ def get_fw_leaderboards_characters(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -135,6 +155,11 @@ def get_fw_leaderboards_corporations(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetFwLeaderboardsCorporations",
@@ -159,6 +184,11 @@ def get_fw_stats(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -185,6 +215,11 @@ def get_fw_systems(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetFwSystems",
@@ -209,6 +244,11 @@ def get_fw_wars(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),

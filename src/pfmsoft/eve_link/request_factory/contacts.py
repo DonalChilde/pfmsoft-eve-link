@@ -29,6 +29,11 @@ def delete_characters_character_id_contacts(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="DeleteCharactersCharacterIdContacts",
@@ -59,6 +64,11 @@ def get_alliances_alliance_id_contacts(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -91,6 +101,11 @@ def get_alliances_alliance_id_contacts_labels(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetAlliancesAllianceIdContactsLabels",
@@ -121,6 +136,11 @@ def get_characters_character_id_contacts(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -153,6 +173,11 @@ def get_characters_character_id_contacts_labels(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetCharactersCharacterIdContactsLabels",
@@ -184,6 +209,11 @@ def get_corporations_corporation_id_contacts(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetCorporationsCorporationIdContacts",
@@ -214,6 +244,11 @@ def get_corporations_corporation_id_contacts_labels(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -253,6 +288,11 @@ def post_characters_character_id_contacts(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="PostCharactersCharacterIdContacts",
@@ -291,6 +331,11 @@ def put_characters_character_id_contacts(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),

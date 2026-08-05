@@ -23,6 +23,11 @@ def get_universe_ancestries(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseAncestries",
@@ -50,6 +55,11 @@ def get_universe_asteroid_belts_asteroid_belt_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseAsteroidBeltsAsteroidBeltId",
@@ -75,6 +85,11 @@ def get_universe_bloodlines(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseBloodlines",
@@ -99,6 +114,11 @@ def get_universe_categories(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -127,6 +147,11 @@ def get_universe_categories_category_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseCategoriesCategoryId",
@@ -151,6 +176,11 @@ def get_universe_constellations(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -179,6 +209,11 @@ def get_universe_constellations_constellation_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseConstellationsConstellationId",
@@ -204,6 +239,11 @@ def get_universe_factions(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseFactions",
@@ -228,6 +268,11 @@ def get_universe_graphics(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -256,6 +301,11 @@ def get_universe_graphics_graphic_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseGraphicsGraphicId",
@@ -280,6 +330,11 @@ def get_universe_groups(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -308,6 +363,11 @@ def get_universe_groups_group_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseGroupsGroupId",
@@ -334,6 +394,11 @@ def get_universe_moons_moon_id(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -362,6 +427,11 @@ def get_universe_planets_planet_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniversePlanetsPlanetId",
@@ -387,6 +457,11 @@ def get_universe_races(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseRaces",
@@ -411,6 +486,11 @@ def get_universe_regions(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -439,6 +519,11 @@ def get_universe_regions_region_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseRegionsRegionId",
@@ -465,6 +550,11 @@ def get_universe_stargates_stargate_id(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -493,6 +583,11 @@ def get_universe_stars_star_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseStarsStarId",
@@ -520,6 +615,11 @@ def get_universe_stations_station_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseStationsStationId",
@@ -546,6 +646,11 @@ def get_universe_structures(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -576,6 +681,11 @@ def get_universe_structures_structure_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseStructuresStructureId",
@@ -603,6 +713,11 @@ def get_universe_system_jumps(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseSystemJumps",
@@ -628,6 +743,11 @@ def get_universe_system_kills(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseSystemKills",
@@ -652,6 +772,11 @@ def get_universe_systems(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -680,6 +805,11 @@ def get_universe_systems_system_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseSystemsSystemId",
@@ -704,6 +834,11 @@ def get_universe_types(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -732,6 +867,11 @@ def get_universe_types_type_id(
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
 
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
     request = EsiRequest(
         request_id=uuid4(),
         operation_id="GetUniverseTypesTypeId",
@@ -757,6 +897,11 @@ def post_universe_ids(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),
@@ -784,6 +929,11 @@ def post_universe_names(
     header_parameters["Accept-Language"] = accept_language
     header_parameters["X-Compatibility-Date"] = x_compatibility_date
     header_parameters["X-Tenant"] = x_tenant
+
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
 
     request = EsiRequest(
         request_id=uuid4(),

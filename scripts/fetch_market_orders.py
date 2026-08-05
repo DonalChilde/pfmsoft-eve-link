@@ -35,6 +35,7 @@ from rich.console import Console
 from whenever import Instant
 
 from pfmsoft.eve_link import EsiLink, EsiRequest, EsiSchema, SimpleRequests
+from pfmsoft.eve_link import request_factory as RF
 from pfmsoft.eve_link.cli.helpers import output_to_stdout_or_file
 from pfmsoft.eve_link.esi_request.models import EsiResponse, FailedEsiResponse
 from pfmsoft.eve_link.settings import get_settings
@@ -207,11 +208,14 @@ async def fetch_market_orders(
     esi_link: EsiLink, esi_schema: EsiSchema, *, region_id: int
 ) -> EsiResponse | FailedEsiResponse:
     """Fetches market orders for a given region ID from the EVE Online API."""
-    esi_request = EsiRequest(
-        request_id=uuid4(),
-        operation_id="GetMarketsRegionIdOrders",
-        path_parameters={"region_id": region_id},
-        query_parameters={"order_type": "all"},
+    # esi_request = EsiRequest(
+    #     request_id=uuid4(),
+    #     operation_id="GetMarketsRegionIdOrders",
+    #     path_parameters={"region_id": region_id},
+    #     query_parameters={"order_type": "all"},
+    # )
+    esi_request = RF.market.get_markets_region_id_orders(
+        region_id=region_id, order_type="all"
     )
     return await esi_link.make_request(esi_request=esi_request, schema=esi_schema)
 
