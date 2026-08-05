@@ -255,14 +255,14 @@ def _validate_authorization(
 ) -> None:
     """Validate authorization presence."""
     if not operation.is_authentication_required:
-        if esi_request.character_id is not None:
+        if esi_request.auth_character_id is not None:
             _add_error(
                 errors,
                 operation.operation_id,
                 "Authorization must be None for operations that do not require authentication.",
             )
 
-        if esi_request.credential_id is not None:
+        if esi_request.auth_credential_id is not None:
             _add_error(
                 errors,
                 operation.operation_id,
@@ -270,15 +270,15 @@ def _validate_authorization(
             )
         return
 
-    if not isinstance(esi_request.character_id, int) or isinstance(
-        esi_request.character_id, bool
+    if not isinstance(esi_request.auth_character_id, int) or isinstance(
+        esi_request.auth_character_id, bool
     ):
         _add_error(
             errors,
             operation.operation_id,
             "Authorization.character_id must be an integer.",
         )
-    if not isinstance(esi_request.credential_id, UUID):
+    if not isinstance(esi_request.auth_credential_id, UUID):
         _add_error(
             errors,
             operation.operation_id,

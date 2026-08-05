@@ -108,7 +108,7 @@ def _make_schema(mutator=None) -> EsiSchema:  # noqa: ANN001
 
 def _auth_fields() -> dict[str, object]:
     """Build authorization field values for authenticated requests."""
-    return {"character_id": 123, "credential_id": uuid4()}
+    return {"auth_character_id": 123, "auth_credential_id": uuid4()}
 
 
 def test_validate_rejects_missing_required_path_and_query_parameters() -> None:
@@ -179,8 +179,8 @@ def test_validate_rejects_non_string_header_and_invalid_auth_types() -> None:
         path_parameters={"character_id": 123},
         query_parameters={"datasource": "tranquility"},
         header_parameters={"Accept-Language": 5},
-        character_id=True,
-        credential_id="not-a-uuid",
+        auth_character_id=True,
+        auth_credential_id="not-a-uuid",
     )
 
     with pytest.raises(EsiRequestValidationErrors) as exc_info:

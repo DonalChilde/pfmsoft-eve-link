@@ -115,8 +115,8 @@ def _make_schema() -> EsiSchema:
 def _auth_fields() -> dict[str, object]:
     """Create authorization field values for an authenticated request."""
     return {
-        "character_id": 123,
-        "credential_id": uuid4(),
+        "auth_character_id": 123,
+        "auth_credential_id": uuid4(),
     }
 
 

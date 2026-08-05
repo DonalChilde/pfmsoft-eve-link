@@ -24,8 +24,8 @@ def auth(character_id: int, credential_id: UUID) -> tuple[EsiRequest, str]:
         description="Fetches the attributes of a character.",
         operation_id="GetCharactersCharacterIdAttributes",
         path_parameters={"character_id": character_id},
-        credential_id=credential_id,
-        character_id=character_id,
+        auth_credential_id=credential_id,
+        auth_character_id=character_id,
     )
     return request, "authorized.request.json"
 

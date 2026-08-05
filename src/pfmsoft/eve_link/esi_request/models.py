@@ -79,9 +79,9 @@ class EsiRequest:
     request_body: Any | None = None
     """The JSON payload of the request, if applicable. This is used for POST, PUT, and PATCH 
         requests."""
-    character_id: int | None = None
+    auth_character_id: int | None = None
     """The character ID used for authorization."""
-    credential_id: UUID | None = None
+    auth_credential_id: UUID | None = None
     """The credential ID for authorization. This is used to link the authorization
         to the credential that was used to obtain it. This UUID is obtained from the 
         credential manager that provides the access token."""
@@ -89,7 +89,9 @@ class EsiRequest:
     @property
     def has_authorization(self) -> bool:
         """Check if the request has an authorization."""
-        return self.character_id is not None and self.credential_id is not None
+        return (
+            self.auth_character_id is not None and self.auth_credential_id is not None
+        )
 
     @property
     def authorization_slug(self) -> UUID:
@@ -106,7 +108,7 @@ class EsiRequest:
             raise ValueError(
                 "Cannot generate authorization key without both character_id and credential_id."
             )
-        return uuid5(self.credential_id, str(self.character_id))  # type: ignore
+        return uuid5(self.auth_credential_id, str(self.auth_character_id))  # type: ignore
 
 
 EsiRequestRoot = RootModel[EsiRequest]

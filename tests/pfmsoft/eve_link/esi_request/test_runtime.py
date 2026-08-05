@@ -52,7 +52,7 @@ def test_set_runtime_attributes_sets_default_headers() -> None:
     """Set runtime defaults when no optional headers are supplied."""
     schema = _make_schema()
     request = EsiRequest(
-        operation_id="GetStatus", character_id=123, credential_id=uuid4()
+        operation_id="GetStatus", auth_character_id=123, auth_credential_id=uuid4()
     )
 
     runtime = build_runtime_esi_request(request, schema)
@@ -74,8 +74,8 @@ def test_set_runtime_attributes_respects_user_provided_headers() -> None:
             "X-Tenant": "singularity",
             "X-Compatibility-Date": "2025-05-05",
         },
-        character_id=123,
-        credential_id=uuid4(),
+        auth_character_id=123,
+        auth_credential_id=uuid4(),
     )
 
     runtime = build_runtime_esi_request(request, schema)
@@ -91,7 +91,7 @@ def test_make_request_includes_runtime_headers() -> None:
     """Include generated runtime headers in outgoing Request objects."""
     schema = _make_schema()
     request = EsiRequest(
-        operation_id="GetStatus", character_id=123, credential_id=uuid4()
+        operation_id="GetStatus", auth_character_id=123, auth_credential_id=uuid4()
     )
 
     runtime = build_runtime_esi_request(request, schema)
@@ -110,8 +110,8 @@ def test_set_runtime_attributes_sets_page_for_paged_operation() -> None:
     request = EsiRequest(
         operation_id="GetCharacterAssets",
         path_parameters={"character_id": 123},
-        character_id=123,
-        credential_id=uuid4(),
+        auth_character_id=123,
+        auth_credential_id=uuid4(),
     )
 
     runtime = build_runtime_esi_request(request, schema)
