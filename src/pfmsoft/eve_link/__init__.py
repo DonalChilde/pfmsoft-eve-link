@@ -18,6 +18,7 @@ __url__ = "https://github.com/DonalChilde/pfmsoft-eve-link"
 __license__ = "MIT"
 
 
+# foo = ""
 from pfmsoft.eve_link import request_factory
 from pfmsoft.eve_link.esi_link import EsiLink, SimpleRequests
 from pfmsoft.eve_link.esi_request.models import (

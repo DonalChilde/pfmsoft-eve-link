@@ -436,7 +436,7 @@ wheels = [
 
 [[package]]
 name = "pfmsoft-eve-auth-manager"
-version = "0.4.4"
+version = "0.4.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx2" },
@@ -451,9 +451,9 @@ dependencies = [
     { name = "typer" },
     { name = "whenever" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1a/bf/f4bb8e4eb7e22ce1260bced9f8ed8ca65ab7e3e9c89e3769162e789ee7b8/pfmsoft_eve_auth_manager-0.4.4.tar.gz", hash = "sha256:fdbfd0c25c39e1e1e66abfac479091efc9135aa58f63931054ae3ed61a94ed0c", size = 34538, upload-time = "2026-07-20T18:50:47.206Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c2/0e/1fe3f7ef2307a18731d359e20706da102512b1e58734d3d56198d7bd99cd/pfmsoft_eve_auth_manager-0.4.5.tar.gz", hash = "sha256:149a1546fa0ff7337021bc88b28c9db762bfae9ef32091174460af56eef4e823", size = 34734, upload-time = "2026-08-06T23:11:51.714Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/84/1fb02cc2463b3932ed1b29545d3f5a1865f14b4c2ec8bc07a5d7020ad187/pfmsoft_eve_auth_manager-0.4.4-py3-none-any.whl", hash = "sha256:8edeea4565252a5cc700904b452f1dcd7439199acb4ae893239a14623ac216a4", size = 54597, upload-time = "2026-07-20T18:50:46.076Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/e2/2da76fa42113a58597971dca48d746e09cf1c08ed58463a03daba4718431/pfmsoft_eve_auth_manager-0.4.5-py3-none-any.whl", hash = "sha256:b356e3fe0fd2eaddce688bb123262db3279d34576665ff7d26736f442304a366", size = 54637, upload-time = "2026-08-06T23:11:50.52Z" },
 ]
 
 [[package]]
@@ -492,7 +492,7 @@ requires-dist = [
     { name = "mdformat", specifier = ">=1.0.0" },
     { name = "mdformat-gfm", specifier = ">=1.0.0" },
     { name = "pfmsoft-api-request", specifier = ">=0.1.3" },
-    { name = "pfmsoft-eve-auth-manager", specifier = ">=0.4.3" },
+    { name = "pfmsoft-eve-auth-manager", specifier = ">=0.4.5" },
     { name = "pfmsoft-eve-snippets", specifier = ">=0.1.7" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },
