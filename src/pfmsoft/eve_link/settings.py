@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import NAMESPACE_DNS, uuid5
 
+from pfmsoft.api_request.settings import ApiRequestSettings
+from pfmsoft.api_request.settings import get_settings as get_api_request_settings
 from pfmsoft.eve_auth_manager.settings import EveAuthManagerSettings
 from pfmsoft.eve_auth_manager.settings import get_settings as get_auth_manager_settings
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -39,7 +41,7 @@ class EsiLinkSettings:
     # Eve Auth Manager settings
     eve_auth_manager_settings: EveAuthManagerSettings
     # API Request settings
-    api_request_cache_file: Path
+    api_request_settings: ApiRequestSettings
     max_rate: float = 50.0
     time_period: float = 1.0
 
@@ -93,9 +95,11 @@ def _initialize_settings(application_directory: Path) -> EsiLinkSettings:
         application_directory=application_directory,
         logging_directory=application_directory / "logs",
         schema_cache_directory=application_directory / "schema_cache",
-        api_request_cache_file=application_directory / "api_requests_web_cache.sqlite",
         eve_auth_manager_settings=get_auth_manager_settings(
             application_directory=application_directory / "eve_auth_manager"
+        ),
+        api_request_settings=get_api_request_settings(
+            application_directory=application_directory / "api_request"
         ),
     )
     # Ensure that the application directories exist.

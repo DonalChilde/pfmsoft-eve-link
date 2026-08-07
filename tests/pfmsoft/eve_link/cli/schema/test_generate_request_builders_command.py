@@ -86,7 +86,7 @@ def test_generate_request_builders_uses_package_name_option(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Pass --package-name through to generator module_name argument."""
+    """Pass --package-name through to generator package_name argument."""
     input_path = tmp_path / "schema.json"
     input_path.write_text("{}", encoding="utf-8")
     output_dir = tmp_path / "generated_requests"
@@ -123,4 +123,4 @@ def test_generate_request_builders_uses_package_name_option(
     )
 
     assert result.exit_code == 0
-    assert captured_kwargs["module_name"] == "custom_pkg"
+    assert captured_kwargs["package_name"] == "custom_pkg"

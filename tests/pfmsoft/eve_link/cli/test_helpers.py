@@ -9,7 +9,7 @@ from pfmsoft.api_request.settings import ApiRequestSettings
 from pfmsoft.eve_auth_manager.settings import EveAuthManagerSettings
 
 from pfmsoft.eve_link.cli import helpers
-from pfmsoft.eve_link.settings import SETTINGS_KEY, EsiLinkSettings
+from pfmsoft.eve_link.settings import SETTINGS_KEY, EsiLinkSettings, get_settings
 
 
 class _FakeStdin:
@@ -70,13 +70,7 @@ class _FakeSchemaManager:
 def settings(tmp_path: Path) -> EsiLinkSettings:
     """Build EsiLink settings rooted in the pytest temp directory."""
     application_directory = tmp_path / "app"
-    return EsiLinkSettings(
-        application_directory=application_directory,
-        logging_directory=application_directory / "logs",
-        schema_cache_directory=application_directory / "schema-cache",
-        auth_manager_db_file=application_directory / "auth.sqlite",
-        api_request_cache_file=application_directory / "api.sqlite",
-    )
+    return get_settings(application_directory=application_directory)
 
 
 def test_get_stdin_reads_non_interactive_input(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -111,14 +105,10 @@ def test_construct_settings_for_subsystems(settings: EsiLinkSettings) -> None:
     api_settings = helpers.construct_api_request_settings(settings)
 
     assert isinstance(auth_settings, EveAuthManagerSettings)
-    assert auth_settings.application_directory == settings.application_directory
-    assert auth_settings.logging_directory == settings.logging_directory
-    assert auth_settings.authorization_database_path == settings.auth_manager_db_file
+    assert auth_settings is settings.eve_auth_manager_settings
 
     assert isinstance(api_settings, ApiRequestSettings)
-    assert api_settings.application_directory == settings.application_directory
-    assert api_settings.logging_directory == settings.logging_directory
-    assert api_settings.web_cache_path == settings.api_request_cache_file
+    assert api_settings is settings.api_request_settings
 
 
 def test_get_schema_loads_requested_compatibility_date() -> None:

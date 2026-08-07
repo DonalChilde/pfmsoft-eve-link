@@ -45,13 +45,13 @@ def default_options(
     """
     init_deferred_handler()
     settings = get_settings()
-    api_request_settings = construct_api_request_settings(settings)
+
     setup_logging(log_dir=settings.logging_directory)
     flush_deferred_handler()
     ctx.obj = {
         SETTINGS_KEY: settings,
         AUTH_MANAGER_SETTINGS_KEY: settings.eve_auth_manager_settings,
-        API_REQUEST_SETTINGS_KEY: api_request_settings,
+        API_REQUEST_SETTINGS_KEY: settings.api_request_settings,
     }
     logger.info(
         f"Starting {__app_name__} v{__version__} with settings: {asdict(settings)!r}"

@@ -11,7 +11,7 @@ from typer.testing import CliRunner
 from pfmsoft.eve_link.cli import main_typer
 from pfmsoft.eve_link.cli.main_typer import app
 from pfmsoft.eve_link.cli.request import validate as validate_command
-from pfmsoft.eve_link.settings import EsiLinkSettings
+from pfmsoft.eve_link.settings import EsiLinkSettings, get_settings
 
 runner = CliRunner()
 
@@ -127,13 +127,7 @@ def _patch_main_app_startup(
     """Stub the top-level app startup path with isolated temp settings."""
     application_directory = tmp_path / "app"
     application_directory.mkdir(parents=True, exist_ok=True)
-    settings = EsiLinkSettings(
-        application_directory=application_directory,
-        logging_directory=application_directory / "logs",
-        schema_cache_directory=application_directory / "schema-cache",
-        auth_manager_db_file=application_directory / "auth.sqlite",
-        api_request_cache_file=application_directory / "api.sqlite",
-    )
+    settings = get_settings(application_directory=application_directory)
     monkeypatch.setattr(main_typer, "get_settings", lambda: settings)
     monkeypatch.setattr(main_typer, "init_deferred_handler", lambda: None)
     monkeypatch.setattr(main_typer, "setup_logging", lambda **_kwargs: None)
