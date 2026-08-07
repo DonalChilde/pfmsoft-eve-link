@@ -12,10 +12,7 @@ from rich.console import Console
 
 from pfmsoft.eve_link import __app_name__, __version__
 from pfmsoft.eve_link.cli import app as main_app
-from pfmsoft.eve_link.cli.helpers import (
-    construct_api_request_settings,
-    get_eve_link_settings_from_context,
-)
+from pfmsoft.eve_link.cli.helpers import get_eve_link_settings_from_context
 from pfmsoft.eve_link.logging_config import (
     flush_deferred_handler,
     init_deferred_handler,
