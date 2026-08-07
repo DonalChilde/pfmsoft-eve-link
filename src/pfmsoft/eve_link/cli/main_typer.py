@@ -14,7 +14,6 @@ from pfmsoft.eve_link import __app_name__, __version__
 from pfmsoft.eve_link.cli import app as main_app
 from pfmsoft.eve_link.cli.helpers import (
     construct_api_request_settings,
-    construct_eve_auth_manager_settings,
     get_eve_link_settings_from_context,
 )
 from pfmsoft.eve_link.logging_config import (
@@ -46,14 +45,13 @@ def default_options(
     """
     init_deferred_handler()
     settings = get_settings()
-    auth_manager_settings = construct_eve_auth_manager_settings(settings)
-    api_request_settings = construct_api_request_settings(settings)
+
     setup_logging(log_dir=settings.logging_directory)
     flush_deferred_handler()
     ctx.obj = {
         SETTINGS_KEY: settings,
-        AUTH_MANAGER_SETTINGS_KEY: auth_manager_settings,
-        API_REQUEST_SETTINGS_KEY: api_request_settings,
+        AUTH_MANAGER_SETTINGS_KEY: settings.eve_auth_manager_settings,
+        API_REQUEST_SETTINGS_KEY: settings.api_request_settings,
     }
     logger.info(
         f"Starting {__app_name__} v{__version__} with settings: {asdict(settings)!r}"

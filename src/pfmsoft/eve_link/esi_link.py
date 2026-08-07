@@ -385,8 +385,8 @@ class SimpleRequests:
             EsiLink: An instance of the EsiLink class.
         """
         return EsiLink(
-            auth_manager_db_path=self.settings.auth_manager_db_file,
-            web_cache_path=self.settings.api_request_cache_file,
+            auth_manager_db_path=self.settings.eve_auth_manager_settings.authorization_database_path,
+            web_cache_path=self.settings.api_request_settings.web_cache_path,
             max_rate=self.settings.max_rate,
             time_period=self.settings.time_period,
         )

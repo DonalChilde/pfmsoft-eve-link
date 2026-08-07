@@ -47,35 +47,27 @@ def get_eve_link_settings_from_context(ctx: typer.Context) -> EsiLinkSettings:
 def construct_eve_auth_manager_settings(
     settings: EsiLinkSettings,
 ) -> EveAuthManagerSettings:
-    """Construct an EveAuthManagerSettings object from the Eve ESI Link settings.
+    """Return EveAuthManagerSettings from Eve ESI Link settings.
 
     Args:
         settings: The Eve ESI Link settings.
 
     Returns:
-        An EveAuthManagerSettings object with the appropriate configuration.
+        EveAuthManagerSettings configured for this application instance.
     """
-    return EveAuthManagerSettings(
-        application_directory=settings.application_directory,
-        logging_directory=settings.logging_directory,
-        authorization_database_path=settings.auth_manager_db_file,
-    )
+    return settings.eve_auth_manager_settings
 
 
 def construct_api_request_settings(settings: EsiLinkSettings) -> ApiRequestSettings:
-    """Construct an ApiRequestSettings object from the Eve ESI Link settings.
+    """Return ApiRequestSettings from Eve ESI Link settings.
 
     Args:
         settings: The Eve ESI Link settings.
 
     Returns:
-        An ApiRequestSettings object with the appropriate configuration.
+        ApiRequestSettings configured for this application instance.
     """
-    return ApiRequestSettings(
-        application_directory=settings.application_directory,
-        logging_directory=settings.logging_directory,
-        web_cache_path=settings.api_request_cache_file,
-    )
+    return settings.api_request_settings
 
 
 @deprecated(

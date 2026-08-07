@@ -3,7 +3,7 @@
 from typing import Any
 from uuid import uuid4
 
-from pfmsoft.eve_link import EsiRequest
+from pfmsoft.eve_link.esi_request.models import EsiRequest
 
 from . import ACCEPT_LANGUAGE, X_COMPATIBILITY_DATE, X_TENANT
 
