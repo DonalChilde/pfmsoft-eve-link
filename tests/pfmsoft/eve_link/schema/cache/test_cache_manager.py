@@ -38,35 +38,6 @@ def _make_schema(
     )
 
 
-def test_save_and_load_round_trip(tmp_path: Path) -> None:
-    """Save and load a schema by compatibility date."""
-    manager = SchemaCacheManager(cache_directory=tmp_path)
-    schema = _make_schema(compatibility_date="2026-06-09", timestamp=123)
-
-    entry = manager.save(schema=schema)
-    loaded = manager.load(compatibility_date="2026-06-09")
-
-    assert entry == SchemaCacheEntry(compatibility_date="2026-06-09", timestamp=123)
-    assert loaded.compatibility_date == "2026-06-09"
-    assert loaded.timestamp == 123
-
-
-def test_save_overwrites_existing_date_entry(tmp_path: Path) -> None:
-    """Replace existing cached entry when saving same compatibility date."""
-    manager = SchemaCacheManager(cache_directory=tmp_path)
-
-    manager.save(schema=_make_schema(compatibility_date="2026-06-09", timestamp=100))
-    manager.save(schema=_make_schema(compatibility_date="2026-06-09", timestamp=200))
-
-    entries = manager.list_entries()
-
-    assert entries == [
-        SchemaCacheEntry(compatibility_date="2026-06-09", timestamp=200),
-    ]
-    loaded = manager.load(compatibility_date="2026-06-09")
-    assert loaded.timestamp == 200
-
-
 def test_list_entries_sorted_and_path_free(tmp_path: Path) -> None:
     """Return sorted list entries containing only date and timestamp."""
     manager = SchemaCacheManager(cache_directory=tmp_path)

@@ -103,7 +103,8 @@ class SchemaOperation:
     def responses_200(self) -> dict[str, Any]:
         """Extract the response schema from the operation object, if present."""
         success_responses = (
-            self.operation_schema.get("responses", {})
+            self.operation_schema
+            .get("responses", {})
             .get("200", {})
             .get("content", {})
             .get("application/json", {})
@@ -213,13 +214,13 @@ class EsiSchema:
         - dereferenced_schema
         - timestamp
         """
-        return json_io.json_dumps(
-            {
-                "dereferenced_schema": deepcopy(self.dereferenced_schema),
-                "timestamp": self.timestamp,
-            },
-            indent=indent,
-        )
+        return EsiSchemaRoot(root=self).model_dump_json(indent=indent)
+
+    @classmethod
+    def deserialize(cls, json_str: str) -> EsiSchema:
+        """Deserialize an EsiSchema compatible JSON string into an EsiSchema instance."""
+        model = EsiSchemaRoot.model_validate_json(json_str).root
+        return model
 
     def _build_schema_operations(self) -> None:
         """Build the schema operations dictionary from the dereferenced schema."""
@@ -313,7 +314,8 @@ class EsiSchema:
     def content_languages(self) -> set[str]:
         """Get the content languages supported by the ESI API from the schema."""
         return set(
-            self.dereferenced_schema.get("components", {})
+            self.dereferenced_schema
+            .get("components", {})
             .get("headers", {})
             .get("ContentLanguage", {})
             .get("schema", {})

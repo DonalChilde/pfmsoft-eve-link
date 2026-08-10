@@ -1,0 +1,8 @@
+## Table of Contents
+
+{% for toc_tag in report.toc_tags %}
+- [{{ toc_tag.tag_name }}](#{{ toc_tag.tag_anchor }})
+{% for operation in toc_tag.operations %}
+  - [{{ operation.operation_id }}](#{{ operation.operation_anchor }})
+{% endfor %}
+{% endfor %}
