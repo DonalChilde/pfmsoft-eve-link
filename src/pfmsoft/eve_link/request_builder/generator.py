@@ -81,7 +81,7 @@ def generate_request_builders(
         Generated package files keyed by relative path.
     """
     env = Environment(
-        loader=PackageLoader("pfmsoft.eve_link.request_builder"),
+        loader=PackageLoader("pfmsoft.eve_link.templates", "request_builder"),
         autoescape=select_autoescape(enabled_extensions=("html", "xml")),
     )
     init_template = env.get_template("package_init.py.j2")

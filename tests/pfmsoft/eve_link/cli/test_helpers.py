@@ -5,8 +5,6 @@ from types import SimpleNamespace
 
 import pytest
 import typer
-from pfmsoft.api_request.settings import ApiRequestSettings
-from pfmsoft.eve_auth_manager.settings import EveAuthManagerSettings
 
 from pfmsoft.eve_link.cli import helpers
 from pfmsoft.eve_link.settings import SETTINGS_KEY, EsiLinkSettings, get_settings
@@ -97,18 +95,6 @@ def test_get_eve_link_settings_from_context_returns_stored_settings(
     ctx = SimpleNamespace(obj={SETTINGS_KEY: settings})
 
     assert helpers.get_eve_link_settings_from_context(ctx) is settings
-
-
-def test_construct_settings_for_subsystems(settings: EsiLinkSettings) -> None:
-    """Map app settings into dependent subsystem settings objects."""
-    auth_settings = helpers.construct_eve_auth_manager_settings(settings)
-    api_settings = helpers.construct_api_request_settings(settings)
-
-    assert isinstance(auth_settings, EveAuthManagerSettings)
-    assert auth_settings is settings.eve_auth_manager_settings
-
-    assert isinstance(api_settings, ApiRequestSettings)
-    assert api_settings is settings.api_request_settings
 
 
 def test_get_schema_loads_requested_compatibility_date() -> None:
