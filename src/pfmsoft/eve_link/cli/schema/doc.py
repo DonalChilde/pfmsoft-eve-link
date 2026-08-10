@@ -1,22 +1,16 @@
-"""Generate markdown documentation from ESI schema JSON."""
+"""Generate markdown documentation from serialized EsiSchema JSON."""
 
 from pathlib import Path
 from typing import Annotated
 
 import typer
-from pfmsoft.eve_snippets import json_io, save_text_file
+from pfmsoft.eve_snippets import save_text_file
 from rich.console import Console
 from rich.markdown import Markdown
 
 from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
-from pfmsoft.eve_link.schema.helpers.schema_files import (
-    load_esi_schema,
-    load_esi_schema_from_file,
-)
-from pfmsoft.eve_link.schema.schema_doc import (
-    FencedDataFormat,
-    generate_esi_schema_markdown_doc,
-)
+from pfmsoft.eve_link.schema.models import EsiSchema
+from pfmsoft.eve_link.schema.schema_report import generate_esi_schema_markdown_report
 
 from ..helpers import get_eve_link_settings_from_context, get_schema, get_stdin
 
@@ -25,7 +19,7 @@ app = typer.Typer(no_args_is_help=True)
 
 @app.command(
     name="generate-doc",
-    help="Generate operation-focused markdown documentation from schema JSON input.",
+    help="Generate operation-focused markdown documentation from serialized EsiSchema JSON input.",
 )
 def generate_schema_doc(
     ctx: typer.Context,
@@ -37,7 +31,7 @@ def generate_schema_doc(
             dir_okay=False,
             readable=True,
             allow_dash=True,
-            help="Path to schema JSON. Use - for stdin. Defaults to None, which will use the cached schema from --date.",
+            help="Path to serialized EsiSchema JSON. Use - for stdin. Defaults to None, which will use the cached schema from --date.",
         ),
     ] = None,
     compatibility_date: Annotated[
@@ -57,13 +51,6 @@ def generate_schema_doc(
             dir_okay=False,
         ),
     ] = Path("-"),
-    fenced_format: Annotated[
-        FencedDataFormat,
-        typer.Option(
-            "--fenced-format",
-            help="Serialization format for fenced request/response blocks. Defaults to json.",
-        ),
-    ] = FencedDataFormat.JSON,
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -86,7 +73,7 @@ def generate_schema_doc(
         ),
     ] = False,
 ) -> None:
-    """Generate markdown documentation from ESI schema JSON.
+    """Generate markdown documentation from serialized EsiSchema JSON.
 
     The generated markdown includes version metadata, TOC grouped by tag, and a
     per-operation section that covers summary, parameters, request body, response schema,
@@ -105,12 +92,7 @@ def generate_schema_doc(
     if file_in == Path("-"):
         input_data = get_stdin()
         try:
-            schema_dict = json_io.json_loads(input_data)
-        except Exception as e:
-            messenger.print(f"[red]Error: Failed to parse JSON input - {e}[/red]")
-            raise typer.Exit(code=1) from e
-        try:
-            esi_schema = load_esi_schema(schema_dict)
+            esi_schema = EsiSchema.deserialize(input_data)
         except Exception as e:
             messenger.print(
                 f"[red]Error: Failed to load schema from JSON input - {e}[/red]"
@@ -118,7 +100,7 @@ def generate_schema_doc(
             raise typer.Exit(code=1) from e
     elif file_in is not None:
         try:
-            esi_schema = load_esi_schema_from_file(file_path=file_in)
+            esi_schema = EsiSchema.deserialize(file_in.read_text(encoding="utf-8"))
         except Exception as e:
             messenger.print(f"[red]Error: Failed to read input file - {e}[/red]")
             raise typer.Exit(code=1) from e
@@ -132,10 +114,7 @@ def generate_schema_doc(
             compatibility_date=compatibility_date,
         )
 
-    markdown_doc = generate_esi_schema_markdown_doc(
-        schema=esi_schema,
-        fenced_format=fenced_format,
-    )
+    markdown_doc = generate_esi_schema_markdown_report(schema=esi_schema)
     if file_out == Path("-"):
         if plain:
             print(markdown_doc)

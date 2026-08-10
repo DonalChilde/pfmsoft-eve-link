@@ -19,7 +19,6 @@ from pfmsoft.eve_link.schema.helpers.fetch import (
 )
 from pfmsoft.eve_link.schema.helpers.schema_files import (
     default_file_name_for_cached_schema,
-    load_esi_schema_from_file,
 )
 from pfmsoft.eve_link.schema.models import EsiSchema
 
@@ -174,7 +173,8 @@ class SchemaCacheManager:
                 "Multiple cached schemas found for compatibility date "
                 f"{compatibility_date}."
             )
-        return load_esi_schema_from_file(matching_files[0])
+        json_string = matching_files[0].read_text(encoding="utf-8")
+        return EsiSchema.deserialize(json_string)
 
     def list_entries(self) -> list[SchemaCacheEntry]:
         """List all cached schema entries.

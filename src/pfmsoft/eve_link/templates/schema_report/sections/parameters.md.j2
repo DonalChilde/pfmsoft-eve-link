@@ -1,0 +1,11 @@
+#### Parameters
+
+{% if operation.parameter_rows %}
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+{% for row in operation.parameter_rows %}
+| {{ row.name }} | {{ row.parameter_in }} | {{ row.required }} | {{ row.parameter_type }} | {{ row.description }} |
+{% endfor %}
+{% else %}
+No path/query/header parameters.
+{% endif %}
