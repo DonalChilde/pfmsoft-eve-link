@@ -88,7 +88,7 @@ def test_load_esi_schema_dereferences_raw_openapi_and_applies_timestamp() -> Non
 
     schema = load_esi_schema(_raw_openapi_schema(), timestamp=instant)
 
-    assert schema.timestamp == instant.timestamp_nanos()
+    assert schema.timestamp == instant.format_iso()
     assert schema.operations["GetStatus"].responses_200 == {
         "type": "object",
         "properties": {"status": {"type": "string"}},
@@ -111,10 +111,10 @@ def test_load_esi_schema_accepts_esi_schema_td_envelope() -> None:
     """Load a pre-dereferenced EsiSchemaTD envelope directly."""
     schema = load_esi_schema({
         "dereferenced_schema": _dereferenced_openapi_schema(),
-        "timestamp": 123,
+        "timestamp": "1970-01-01T00:00:00.000000123Z",
     })
 
-    assert schema.timestamp == 123
+    assert schema.timestamp == "1970-01-01T00:00:00.000000123Z"
     assert schema.compatibility_date == "2026-06-09"
 
 
@@ -122,10 +122,10 @@ def test_load_esi_schema_accepts_timestamped_schema_envelope() -> None:
     """Load a timestamped raw schema envelope through the raw-schema path."""
     schema = load_esi_schema({
         "schema": _raw_openapi_schema(),
-        "timestamp": 456,
+        "timestamp": "1970-01-01T00:00:00.000000456Z",
     })
 
-    assert schema.timestamp == 456
+    assert schema.timestamp == "1970-01-01T00:00:00.000000456Z"
     assert schema.operations["GetStatus"].path == "/status/"
 
 
@@ -133,13 +133,16 @@ def test_load_esi_schema_from_file_loads_json_file(tmp_path: Path) -> None:
     """Read the JSON payload from disk before delegating to the loader."""
     file_path = tmp_path / "schema.json"
     file_path.write_text(
-        json.dumps({"schema": _raw_openapi_schema(), "timestamp": 789}),
+        json.dumps({
+            "schema": _raw_openapi_schema(),
+            "timestamp": "1970-01-01T00:00:00.000000789Z",
+        }),
         encoding="utf-8",
     )
 
     schema = load_esi_schema_from_file(file_path)
 
-    assert schema.timestamp == 789
+    assert schema.timestamp == "1970-01-01T00:00:00.000000789Z"
     assert schema.base_url == "https://esi.evetech.net"
 
 
@@ -151,7 +154,10 @@ def test_load_esi_schema_rejects_unknown_top_level_shape() -> None:
 
 def test_default_file_name_for_cached_schema_uses_date_and_timestamp() -> None:
     """Generate cache filenames from compatibility date and timestamp."""
-    schema = load_esi_schema({"schema": _raw_openapi_schema(), "timestamp": 123456})
+    schema = load_esi_schema({
+        "schema": _raw_openapi_schema(),
+        "timestamp": "1970-01-01T00:00:00.000123456Z",
+    })
 
     assert (
         default_file_name_for_cached_schema(schema)

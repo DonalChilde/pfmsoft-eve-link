@@ -493,7 +493,7 @@ requires-dist = [
     { name = "mdformat-gfm", specifier = ">=1.0.0" },
     { name = "pfmsoft-api-request", specifier = ">=0.1.7" },
     { name = "pfmsoft-eve-auth-manager", specifier = ">=0.4.5" },
-    { name = "pfmsoft-eve-snippets", specifier = ">=0.1.7" },
+    { name = "pfmsoft-eve-snippets", specifier = ">=0.1.8" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },
     { name = "pyyaml", specifier = ">=6.0.3" },
@@ -513,17 +513,18 @@ dev = [
 
 [[package]]
 name = "pfmsoft-eve-snippets"
-version = "0.1.7"
+version = "0.1.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx2" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "typer" },
     { name = "whenever" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/5b/951fd2fee4e9ae10a746264193c2e924ebbd7f2414bbe9da091bcbc42237/pfmsoft_eve_snippets-0.1.7.tar.gz", hash = "sha256:3fde0b56e96b9d4636117d89cc6a31d318c36559d06d84b966a7eddd0e2f1686", size = 11124, upload-time = "2026-07-20T17:52:57.717Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/24/c0/afb1569e7b883c97328a97d34887a782e47a92b8cd6d86ae49de07dc9c8a/pfmsoft_eve_snippets-0.1.8.tar.gz", hash = "sha256:4b5f460ed783c92388c5289530adf53ed1012837f91074916c728bd203b1ec15", size = 11902, upload-time = "2026-08-10T21:50:39.764Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/0e/c4824d4f8eda9e16971b13fc84953ca3f94ebbf367faa55e3e1abd7da140/pfmsoft_eve_snippets-0.1.7-py3-none-any.whl", hash = "sha256:4795da844e257c35476ee5016ab8ba571caea8ce56b312c2b0b4d231d924714b", size = 16653, upload-time = "2026-07-20T17:52:56.407Z" },
+    { url = "https://files.pythonhosted.org/packages/08/f4/fe10197155745f84d0680d06dd43018e36e0c675b6205c4332d0dc0d58d2/pfmsoft_eve_snippets-0.1.8-py3-none-any.whl", hash = "sha256:41a00769a02c97e2fc68a269d11246574a393a6c836d74dd9b48496b928c86cd", size = 18413, upload-time = "2026-08-10T21:50:38.685Z" },
 ]
 
 [[package]]
@@ -828,7 +829,7 @@ wheels = [
 
 [[package]]
 name = "typer"
-version = "0.27.0"
+version = "0.27.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
@@ -836,9 +837,9 @@ dependencies = [
     { name = "rich" },
     { name = "shellingham" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/37/78/fda3361b56efc27944f24225f6ecd13d96d6fcfe37bd0eb34e2f4c63f9fc/typer-0.27.0.tar.gz", hash = "sha256:629bd12ea5d13a17148125d9a264f949eb171fb3f120f9b04d85873cab054fa5", size = 203430, upload-time = "2026-07-15T19:21:07.007Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/40/4a3db7990d1f62a53182aa96eaef57aeb2886a27f90a195bc66713565d31/typer-0.27.1.tar.gz", hash = "sha256:a79bef8469a79c45498e7b814ecf8d603cc7644e9acbd9e19cac0334240b18df", size = 203994, upload-time = "2026-08-03T14:41:03.438Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/40/03/26a383c9e58c213199d1aad1c3d353cfc22d4444ec6d2c0bf8ad02523843/typer-0.27.0-py3-none-any.whl", hash = "sha256:6f4b27631e47f077871b7dc30e933ec0131c1390fbe0e387ea5574b5bac9ccf1", size = 122716, upload-time = "2026-07-15T19:21:05.553Z" },
+    { url = "https://files.pythonhosted.org/packages/43/89/9518bc0c3929bee36b3a4a8e3daddd6e03f92f9961c66d4983b837160543/typer-0.27.1-py3-none-any.whl", hash = "sha256:53150287edd11baeb4e4722c8e394fcdf8181c0ae89485cba8d25c778d5edd56", size = 122874, upload-time = "2026-08-03T14:41:04.391Z" },
 ]
 
 [[package]]

@@ -17,7 +17,6 @@ from typing import Any
 
 from jinja2 import Environment, PackageLoader
 from mdformat import text as mdformat_text  # type: ignore
-from whenever import Instant
 
 from pfmsoft.eve_link.schema.models import EsiSchema, SchemaOperation
 
@@ -110,7 +109,7 @@ def _resolve_download_date_display(schema: EsiSchema) -> str:
     """Resolve a displayable download date from schema timestamp."""
     if schema.timestamp is None:
         return "Unknown"
-    return Instant.from_timestamp_nanos(schema.timestamp).format_iso()
+    return schema.timestamp
 
 
 def _slugify_heading(value: str) -> str:

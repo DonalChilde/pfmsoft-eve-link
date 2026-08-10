@@ -6,7 +6,6 @@ import typer
 from pfmsoft.eve_snippets.markdown.markdown_table import MarkdownTable
 from rich.console import Console
 from rich.markdown import Markdown
-from whenever import Instant
 
 from pfmsoft.eve_link.cli.helpers import get_eve_link_settings_from_context
 from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
@@ -39,11 +38,7 @@ def list_cache(
 
     table = MarkdownTable(headers=["Compatibility Date", "Fetched At"])
     for entry in entries:
-        fetched_at = (
-            Instant.from_timestamp_nanos(entry.timestamp).format("YYYY-MM-DD hh:mm:ss")
-            if entry.timestamp is not None
-            else ""
-        )
+        fetched_at = entry.timestamp if entry.timestamp is not None else ""
         table.add_row([entry.compatibility_date, fetched_at])
 
     rendered = table.render()
