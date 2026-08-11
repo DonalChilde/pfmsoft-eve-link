@@ -1,17 +1,18 @@
 [project]
 name = "pfmsoft-eve-link"
-version = "0.4.5"
+version = "0.4.6"
 description = "A command line first interface to the Eve Online ESI API"
 readme = "README.md"
 authors = [{ name = "Chad Lowe", email = "pfmsoft.dev@gmail.com" }]
 requires-python = ">=3.14"
 dependencies = [
     "httpx2>=2.5.0",
+    "jinja2>=3.1.6",
     "mdformat>=1.0.0",
     "mdformat-gfm>=1.0.0",
-    "pfmsoft-api-request>=0.1.3",
-    "pfmsoft-eve-auth-manager>=0.4.3",
-    "pfmsoft-eve-snippets>=0.1.7",
+    "pfmsoft-api-request>=0.1.7",
+    "pfmsoft-eve-auth-manager>=0.4.5",
+    "pfmsoft-eve-snippets>=0.1.8",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.2",
     "pyyaml>=6.0.3",

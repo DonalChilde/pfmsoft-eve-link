@@ -1,0 +1,7 @@
+#### Summary
+
+| Field | Value |
+| --- | --- |
+{% for row in operation.summary_rows %}
+| {{ row.field_name }} | {{ row.value }} |
+{% endfor %}

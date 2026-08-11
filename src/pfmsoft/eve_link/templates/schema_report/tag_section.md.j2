@@ -1,0 +1,5 @@
+## Tag: {{ tag.tag_name }}
+
+{% for operation in tag.operations %}
+{% include 'operation_section.md.j2' %}
+{% endfor %}

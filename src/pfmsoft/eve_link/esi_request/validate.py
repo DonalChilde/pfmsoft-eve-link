@@ -255,14 +255,14 @@ def _validate_authorization(
 ) -> None:
     """Validate authorization presence."""
     if not operation.is_authentication_required:
-        if esi_request.character_id is not None:
+        if esi_request.auth_character_id is not None:
             _add_error(
                 errors,
                 operation.operation_id,
                 "Authorization must be None for operations that do not require authentication.",
             )
 
-        if esi_request.credential_id is not None:
+        if esi_request.auth_credential_id is not None:
             _add_error(
                 errors,
                 operation.operation_id,
@@ -270,15 +270,15 @@ def _validate_authorization(
             )
         return
 
-    if not isinstance(esi_request.character_id, int) or isinstance(
-        esi_request.character_id, bool
+    if not isinstance(esi_request.auth_character_id, int) or isinstance(
+        esi_request.auth_character_id, bool
     ):
         _add_error(
             errors,
             operation.operation_id,
             "Authorization.character_id must be an integer.",
         )
-    if not isinstance(esi_request.credential_id, UUID):
+    if not isinstance(esi_request.auth_credential_id, UUID):
         _add_error(
             errors,
             operation.operation_id,
@@ -417,7 +417,7 @@ def _validate_request_body(
     """Validate json_body against the operation requestBody schema."""
     request_body_schema = operation.request_body
     if request_body_schema is None:
-        if esi_request.json_payload is not None:
+        if esi_request.request_body is not None:
             _add_error(
                 errors,
                 operation.operation_id,
@@ -426,14 +426,14 @@ def _validate_request_body(
         return
 
     required = bool(request_body_schema.get("required", False))
-    if required and esi_request.json_payload is None:
+    if required and esi_request.request_body is None:
         _add_error(
             errors,
             operation.operation_id,
             "json_body is required for this operation.",
         )
         return
-    if esi_request.json_payload is None:
+    if esi_request.request_body is None:
         return
 
     content = request_body_schema.get("content", {})
@@ -462,7 +462,7 @@ def _validate_request_body(
         return
 
     _validate_json_schema_subset(
-        esi_request.json_payload,
+        esi_request.request_body,
         body_schema,
         path="json_body",
         operation_id=operation.operation_id,

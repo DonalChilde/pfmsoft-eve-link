@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from pfmsoft.eve_link.cli.schema import fetch as fetch_command
-from pfmsoft.eve_link.cli.schema import fetch_changelog as fetch_changelog_command
-from pfmsoft.eve_link.cli.schema import fetch_dates as fetch_dates_command
+from pfmsoft.eve_link.cli.schema.util import fetch as fetch_command
+from pfmsoft.eve_link.cli.schema.util import fetch_changelog as fetch_changelog_command
+from pfmsoft.eve_link.cli.schema.util import fetch_dates as fetch_dates_command
 from pfmsoft.eve_link.schema.helpers.fetch import (
     TimestampedCompatibilityDates,
     TimestampedSchema,

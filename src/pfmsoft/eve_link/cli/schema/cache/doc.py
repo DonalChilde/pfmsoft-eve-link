@@ -10,10 +10,7 @@ from rich.markdown import Markdown
 
 from pfmsoft.eve_link.cli.helpers import get_eve_link_settings_from_context
 from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
-from pfmsoft.eve_link.schema.schema_doc import (
-    FencedDataFormat,
-    generate_esi_schema_markdown_doc,
-)
+from pfmsoft.eve_link.schema.schema_report import generate_esi_schema_markdown_report
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -41,13 +38,6 @@ def doc_cache(
             dir_okay=True,
         ),
     ] = Path("-"),
-    fenced_format: Annotated[
-        FencedDataFormat,
-        typer.Option(
-            "--fenced-format",
-            help="Serialization format for fenced request/response blocks. Defaults to json.",
-        ),
-    ] = FencedDataFormat.JSON,
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -115,10 +105,7 @@ def doc_cache(
         messenger.print(f"[red]Error: Failed to load cached schema - {e}[/red]")
         raise typer.Exit(code=1) from e
 
-    markdown_doc = generate_esi_schema_markdown_doc(
-        schema=esi_schema,
-        fenced_format=fenced_format,
-    )
+    markdown_doc = generate_esi_schema_markdown_report(schema=esi_schema)
 
     if file_out == Path("-"):
         if plain:

@@ -115,8 +115,8 @@ def _make_schema() -> EsiSchema:
 def _auth_fields() -> dict[str, object]:
     """Create authorization field values for an authenticated request."""
     return {
-        "character_id": 123,
-        "credential_id": uuid4(),
+        "auth_character_id": 123,
+        "auth_credential_id": uuid4(),
     }
 
 
@@ -207,7 +207,7 @@ def test_validate_aggregates_multiple_errors() -> None:
         operation_id="post_character_note",
         path_parameters={"character_id": "bad"},
         query_parameters={"page": 1, "unknown": "value"},
-        json_payload={"priority": "invalid", "extra": "x"},
+        request_body={"priority": "invalid", "extra": "x"},
         **_auth_fields(),
     )
 

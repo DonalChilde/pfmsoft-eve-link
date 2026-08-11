@@ -1,0 +1,14 @@
+# ESI Schema Documentation
+
+Version
+: {{ report.version }}
+
+Download Date
+: {{ report.download_date_display }}
+
+Server URL: {{ report.server_url }}
+
+{% include 'toc.md.j2' %}
+{% for tag in report.tags %}
+{% include 'tag_section.md.j2' %}
+{% endfor %}

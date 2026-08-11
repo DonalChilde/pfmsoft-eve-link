@@ -161,8 +161,8 @@ class EsiLink:
         if not esi_request.has_authorization:
             return
         auth_manager = self._check_auth_manager()
-        cred_id = esi_request.credential_id
-        character_id = esi_request.character_id
+        cred_id = esi_request.auth_credential_id
+        character_id = esi_request.auth_character_id
         if cred_id is None or character_id is None:
             raise ValueError(
                 "Credential ID and Character ID must be provided for authorized requests."
@@ -385,8 +385,8 @@ class SimpleRequests:
             EsiLink: An instance of the EsiLink class.
         """
         return EsiLink(
-            auth_manager_db_path=self.settings.auth_manager_db_file,
-            web_cache_path=self.settings.api_request_cache_file,
+            auth_manager_db_path=self.settings.eve_auth_manager_settings.authorization_database_path,
+            web_cache_path=self.settings.api_request_settings.web_cache_path,
             max_rate=self.settings.max_rate,
             time_period=self.settings.time_period,
         )

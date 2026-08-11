@@ -26,7 +26,7 @@ def build_runtime_esi_request(
     rate_limit_key = _rate_limit_key(esi_request, esi_schema)
     headers = _headers(esi_request, esi_schema)
     query_parameters = _query_parameters(esi_request, esi_schema)
-    json_payload = esi_request.json_payload
+    json_payload = esi_request.request_body
     if esi_request.has_authorization:
         authorization_slug = esi_request.authorization_slug
     else:

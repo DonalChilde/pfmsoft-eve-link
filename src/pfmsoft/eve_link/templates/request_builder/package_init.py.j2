@@ -1,0 +1,17 @@
+"""Generated request builders package for {{ module_name }}."""
+
+from pfmsoft.eve_link.language import LangType
+
+X_COMPATIBILITY_DATE: str = "{{ compatibility_date }}"
+ACCEPT_LANGUAGE: LangType = "en"
+X_TENANT: str = "tranquility"
+
+{% for tag in tags -%}
+from . import {{ tag.module_name }}
+
+{% endfor -%}
+__all__ = [
+    {% for tag in tags -%}
+    "{{ tag.module_name }}",
+    {% endfor -%}
+]

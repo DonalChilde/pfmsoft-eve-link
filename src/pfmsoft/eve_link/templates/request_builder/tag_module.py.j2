@@ -1,0 +1,57 @@
+"""Generated request builders for the {{ name }} tag."""
+
+from typing import Any
+from uuid import UUID, uuid4
+
+from pfmsoft.eve_link.esi_request.models import EsiRequest
+
+from . import ACCEPT_LANGUAGE, X_COMPATIBILITY_DATE, X_TENANT
+
+{% for operation in operations %}
+def {{ operation.function_name }}(
+    *,
+    {% if operation.requires_authentication %}
+    auth_character_id: int,
+    auth_credential_id: UUID,
+    {% endif %}
+    {% if operation.has_request_body %}
+    request_body: Any,
+    {% endif %}
+    {% for parameter in operation.parameters %}
+    {{ parameter.argument_name }}: {{ parameter.type_hint }}{% if parameter.has_default %} | None = {{ parameter.default }}{% endif %}{% if not loop.last %},
+    {% endif %}{% endfor %}
+) -> EsiRequest:
+    """{{ operation.description }}"""
+    path_parameters: dict[str, Any] = {}
+    query_parameters: dict[str, Any] = {}
+    header_parameters: dict[str, Any] = {}
+
+    {% for parameter in operation.parameters -%}
+    {% if parameter.kind == "path" -%}
+    path_parameters["{{ parameter.schema_name }}"] = {{ parameter.argument_name }}
+    {% endif -%}
+    {% if parameter.kind == "query" -%}
+    query_parameters["{{ parameter.schema_name }}"] = {{ parameter.argument_name }}
+    {% endif -%}
+    {% if parameter.kind == "header" -%}
+    header_parameters["{{ parameter.schema_name }}"] = {{ parameter.argument_name }}
+    {% endif -%}
+    {% endfor %}
+    # Omit optional parameters that were left as None.
+    path_parameters = {k: v for k, v in path_parameters.items() if v is not None}
+    query_parameters = {k: v for k, v in query_parameters.items() if v is not None}
+    header_parameters = {k: v for k, v in header_parameters.items() if v is not None}
+
+    request = EsiRequest(
+        request_id=uuid4(),
+        operation_id="{{ operation.operation_id }}",
+        header_parameters=header_parameters,
+        path_parameters=path_parameters,
+        query_parameters=query_parameters,
+        {% if operation.requires_authentication %}auth_character_id=auth_character_id,
+        auth_credential_id=auth_credential_id,
+        {% endif %}{% if operation.has_request_body %}request_body=request_body,{% endif %}
+    )
+    return request
+
+{% endfor %}

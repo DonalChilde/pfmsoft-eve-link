@@ -24,8 +24,8 @@ def auth(character_id: int, credential_id: UUID) -> tuple[EsiRequest, str]:
         description="Fetches the attributes of a character.",
         operation_id="GetCharactersCharacterIdAttributes",
         path_parameters={"character_id": character_id},
-        credential_id=credential_id,
-        character_id=character_id,
+        auth_credential_id=credential_id,
+        auth_character_id=character_id,
     )
     return request, "authorized.request.json"
 
@@ -97,7 +97,7 @@ def post_names() -> tuple[EsiRequest, str]:
         name="Post Universe Names",
         description="Post universe names for the specified IDs.",
         operation_id="PostUniverseNames",
-        json_payload=[34, 10000002],
+        request_body=[34, 10000002],
     )
 
     return request_group, "post_names.request.json"

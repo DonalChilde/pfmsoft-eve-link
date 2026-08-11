@@ -108,7 +108,7 @@ def _make_schema(mutator=None) -> EsiSchema:  # noqa: ANN001
 
 def _auth_fields() -> dict[str, object]:
     """Build authorization field values for authenticated requests."""
-    return {"character_id": 123, "credential_id": uuid4()}
+    return {"auth_character_id": 123, "auth_credential_id": uuid4()}
 
 
 def test_validate_rejects_missing_required_path_and_query_parameters() -> None:
@@ -179,8 +179,8 @@ def test_validate_rejects_non_string_header_and_invalid_auth_types() -> None:
         path_parameters={"character_id": 123},
         query_parameters={"datasource": "tranquility"},
         header_parameters={"Accept-Language": 5},
-        character_id=True,
-        credential_id="not-a-uuid",
+        auth_character_id=True,
+        auth_credential_id="not-a-uuid",
     )
 
     with pytest.raises(EsiRequestValidationErrors) as exc_info:
@@ -203,7 +203,7 @@ def test_validate_rejects_request_body_when_operation_has_no_body() -> None:
     schema = _make_schema()
     request = EsiRequest(
         operation_id="get_status",
-        json_payload={"unexpected": True},
+        request_body={"unexpected": True},
     )
 
     with pytest.raises(EsiRequestValidationErrors) as exc_info:
@@ -270,7 +270,7 @@ def test_validate_rejects_invalid_request_body_metadata(
     request = EsiRequest(
         operation_id="post_character_note",
         path_parameters={"character_id": 123},
-        json_payload=payload,
+        request_body=payload,
         **_auth_fields(),
     )
 
@@ -299,7 +299,7 @@ def test_validate_rejects_unsupported_json_schema_keywords_and_missing_type() ->
     request = EsiRequest(
         operation_id="post_character_note",
         path_parameters={"character_id": 123},
-        json_payload={"title": "x"},
+        request_body={"title": "x"},
         **_auth_fields(),
     )
 
@@ -355,7 +355,7 @@ def test_validate_rejects_invalid_object_schema_metadata_and_additional_property
     request = EsiRequest(
         operation_id="post_character_note",
         path_parameters={"character_id": 123},
-        json_payload={"title": "x", "extra": "bad"},
+        request_body={"title": "x", "extra": "bad"},
         **_auth_fields(),
     )
 
@@ -406,13 +406,13 @@ def test_validate_rejects_invalid_nested_property_schema_and_array_items() -> No
     request = EsiRequest(
         operation_id="post_character_note",
         path_parameters={"character_id": 123},
-        json_payload={"title": "x"},
+        request_body={"title": "x"},
         **_auth_fields(),
     )
     array_request = EsiRequest(
         operation_id="post_character_note",
         path_parameters={"character_id": 123},
-        json_payload=["x"],
+        request_body=["x"],
         **_auth_fields(),
     )
 

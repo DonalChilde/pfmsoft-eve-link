@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Self, TypedDict, cast
 
-from pfmsoft.eve_snippets import json_io
 from pydantic import RootModel
+from whenever import Instant
 
 from pfmsoft.eve_link.helpers.resolve_json_ref import resolve_internal_refs
 
@@ -171,7 +171,7 @@ class SchemaOperation:
 
 class EsiSchemaTD(TypedDict):
     dereferenced_schema: dict[str, Any]
-    timestamp: int | None
+    timestamp: str | None
 
 
 EsiSchemaTDRoot = RootModel[EsiSchemaTD]
@@ -188,16 +188,23 @@ class EsiSchema:
     """
 
     dereferenced_schema: dict[str, Any]
-    timestamp: int | None = None
+    timestamp: str | None = None
     """The timestamp associated with the schema, representing the timestamp when the
-        schema was fetched in nanoseconds. This field is optional and can be None if the
-        timestamp is not available or not applicable."""
+        schema was fetched as an ISO 8601 string. This field is optional and can be None 
+        if the timestamp is not available or not applicable."""
     _schema_operations: dict[str, SchemaOperation] = field(
         default_factory=dict[str, SchemaOperation], init=False, repr=False
     )
     _operations_id_by_tag: dict[str, list[str]] = field(
         default_factory=dict[str, list[str]], init=False, repr=False
     )
+
+    @property
+    def timestamp_instant(self) -> Instant | None:
+        """Get the timestamp as an Instant object, if available."""
+        if self.timestamp is not None:
+            return Instant.parse_iso(self.timestamp)
+        return None
 
     def __post_init__(self) -> None:
         """Ensure that the schema is valid."""
@@ -214,13 +221,13 @@ class EsiSchema:
         - dereferenced_schema
         - timestamp
         """
-        return json_io.json_dumps(
-            {
-                "dereferenced_schema": deepcopy(self.dereferenced_schema),
-                "timestamp": self.timestamp,
-            },
-            indent=indent,
-        )
+        return EsiSchemaRoot(root=self).model_dump_json(indent=indent)
+
+    @classmethod
+    def deserialize(cls, json_str: str) -> EsiSchema:
+        """Deserialize an EsiSchema compatible JSON string into an EsiSchema instance."""
+        model = EsiSchemaRoot.model_validate_json(json_str).root
+        return model
 
     def _build_schema_operations(self) -> None:
         """Build the schema operations dictionary from the dereferenced schema."""
@@ -255,7 +262,7 @@ class EsiSchema:
 
     @classmethod
     def from_raw_schema(
-        cls, raw_schema: dict[str, Any], timestamp: int | None = None
+        cls, raw_schema: dict[str, Any], timestamp: str | None = None
     ) -> Self:
         """Factory method to create an EsiSchema instance from a raw OpenAPI schema.
 
@@ -264,7 +271,7 @@ class EsiSchema:
         Args:
             raw_schema: The raw OpenAPI schema as a dictionary.
             timestamp: The timestamp associated with the schema, representing the timestamp when the
-                schema was fetched in nanoseconds. This field is optional and can be None if the
+                schema was fetched as an ISO 8601 string. This field is optional and can be None if the
                 timestamp is not available or not applicable.
 
         Returns:

@@ -45,18 +45,18 @@ def load_esi_schema(
     if is_open_api_schema(schema_dict):
         # dict is an openapi schema, it may or may not be dereferenced.
         if timestamp is None:
-            timestamp_int = None
+            timestamp_value = None
         else:
-            timestamp_int = timestamp.timestamp_nanos()
+            timestamp_value = timestamp.format_iso()
         if is_raw_schema(schema_dict):
             return EsiSchema.from_raw_schema(
                 raw_schema=schema_dict,
-                timestamp=timestamp_int,
+                timestamp=timestamp_value,
             )
         else:
             return EsiSchemaRoot.model_validate({
                 "dereferenced_schema": schema_dict,
-                "timestamp": timestamp_int,
+                "timestamp": timestamp_value,
             }).root
     if is_esi_schema_td(schema_dict):
         # EsiSchemaTD is expected to be dereferenced, so we can just pass it through.
@@ -100,6 +100,9 @@ def default_file_name_for_cached_schema(schema: EsiSchema) -> str:
 
     Returns:
         Canonical filename in the form
-        ``schema_<compatibility_date>_<timestamp>_esi_schema.json``.
+        ``schema_<compatibility_date>_<timestamp_nanos>_esi_schema.json``.
     """
-    return f"schema_{schema.compatibility_date}_{schema.timestamp}_esi_schema.json"
+    timestamp_nanos = (
+        schema.timestamp_instant.timestamp_nanos() if schema.timestamp_instant else None
+    )
+    return f"schema_{schema.compatibility_date}_{timestamp_nanos}_esi_schema.json"

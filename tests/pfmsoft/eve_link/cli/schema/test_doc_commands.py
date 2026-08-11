@@ -6,8 +6,8 @@ from types import SimpleNamespace
 import pytest
 from typer.testing import CliRunner
 
-from pfmsoft.eve_link.cli.schema import doc as doc_command
 from pfmsoft.eve_link.cli.schema.cache import doc as cache_doc_command
+from pfmsoft.eve_link.cli.schema.util import doc as doc_command
 
 runner = CliRunner()
 
@@ -91,8 +91,8 @@ def test_cache_doc_saves_directory_output_with_default_filename(
     )
     monkeypatch.setattr(
         cache_doc_command,
-        "generate_esi_schema_markdown_doc",
-        lambda *, schema, fenced_format: "# Cached Schema Doc\n",
+        "generate_esi_schema_markdown_report",
+        lambda *, schema: "# Cached Schema Doc\n",
     )
 
     def fake_save_text_file(**kwargs):  # noqa: ANN003
@@ -113,6 +113,14 @@ def test_cache_doc_saves_directory_output_with_default_filename(
     assert "Markdown documentation saved to" in result.stderr
 
 
+def test_generate_doc_rejects_compatibility_date_option() -> None:
+    """The command should operate on the schema payload itself, not the cache."""
+    result = runner.invoke(doc_command.app, ["--date", "2026-06-09"])
+
+    assert result.exit_code == 2
+    assert "No such option: --date" in result.output
+
+
 def test_generate_doc_reports_invalid_stdin_schema(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -131,13 +139,12 @@ def test_generate_doc_prints_plain_markdown_from_stdin(
     """Generate markdown from stdin and print plain text to stdout."""
     schema = SimpleNamespace(compatibility_date="2026-06-09")
 
-    monkeypatch.setattr(doc_command, "get_stdin", lambda: '{"schema": {}}')
-    monkeypatch.setattr(doc_command.json_io, "json_loads", lambda _text: {"schema": {}})
-    monkeypatch.setattr(doc_command, "load_esi_schema", lambda _schema: schema)
+    monkeypatch.setattr(doc_command, "get_stdin", lambda: "serialized-schema")
+    monkeypatch.setattr(doc_command.EsiSchema, "deserialize", lambda _text: schema)
     monkeypatch.setattr(
         doc_command,
-        "generate_esi_schema_markdown_doc",
-        lambda *, schema, fenced_format: "# Generated Schema Doc\n",
+        "generate_esi_schema_markdown_report",
+        lambda *, schema: "# Generated Schema Doc\n",
     )
 
     result = runner.invoke(doc_command.app, ["--from", "-", "--plain"])
@@ -158,12 +165,14 @@ def test_generate_doc_saves_directory_output_with_default_filename(
     saved: dict[str, object] = {}
 
     monkeypatch.setattr(
-        doc_command, "load_esi_schema_from_file", lambda *, file_path: schema
+        doc_command.EsiSchema,
+        "deserialize",
+        lambda _text: schema,
     )
     monkeypatch.setattr(
         doc_command,
-        "generate_esi_schema_markdown_doc",
-        lambda *, schema, fenced_format: "# Generated Schema Doc\n",
+        "generate_esi_schema_markdown_report",
+        lambda *, schema: "# Generated Schema Doc\n",
     )
 
     def fake_save_text_file(**kwargs):  # noqa: ANN003

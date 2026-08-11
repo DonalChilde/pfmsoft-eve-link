@@ -24,7 +24,7 @@ from pfmsoft.eve_link.esi_request.models import (
     RuntimeEsiRequest,
 )
 from pfmsoft.eve_link.esi_request.validate import EsiRequestValidationErrors
-from pfmsoft.eve_link.settings import EsiLinkSettings
+from pfmsoft.eve_link.settings import EsiLinkSettings, get_settings
 
 runner = CliRunner()
 
@@ -93,13 +93,7 @@ class _FakeMessenger:
 def settings(tmp_path: Path) -> EsiLinkSettings:
     """Build EsiLink settings rooted in the pytest temp directory."""
     application_directory = tmp_path / "app"
-    return EsiLinkSettings(
-        application_directory=application_directory,
-        logging_directory=application_directory / "logs",
-        schema_cache_directory=application_directory / "schema-cache",
-        auth_manager_db_file=application_directory / "auth.sqlite",
-        api_request_cache_file=application_directory / "api.sqlite",
-    )
+    return get_settings(application_directory=application_directory)
 
 
 def _single_request_json(*, request_id: UUID, operation_id: str = "GetStatus") -> str:

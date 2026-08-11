@@ -119,7 +119,8 @@ def test_cache_list_plain_outputs_markdown_table(
     manager = _FakeCacheManager(
         entries=[
             SimpleNamespace(
-                compatibility_date="2026-06-09", timestamp=1_700_000_000_000_000_000
+                compatibility_date="2026-06-09",
+                timestamp="2026-06-09T12:00:00Z",
             ),
             SimpleNamespace(compatibility_date="2026-06-10", timestamp=None),
         ]

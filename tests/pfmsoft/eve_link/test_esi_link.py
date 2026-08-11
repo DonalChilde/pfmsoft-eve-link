@@ -230,8 +230,8 @@ def test_required_access_token_is_optional_and_attached_when_present() -> None:
     credential_id = uuid4()
     auth_request = EsiRequest(
         operation_id="GetStatus",
-        character_id=42,
-        credential_id=credential_id,
+        auth_character_id=42,
+        auth_credential_id=credential_id,
     )
     link.auth_manager = _FakeAuthManager(access_token="attached-token")
 
@@ -248,8 +248,8 @@ def test_required_access_token_rejects_incomplete_authorization_tuple() -> None:
     runtime_request = _make_runtime_request(request_id=uuid4())
     inconsistent_request = SimpleNamespace(
         has_authorization=True,
-        credential_id=None,
-        character_id=42,
+        auth_credential_id=None,
+        auth_character_id=42,
     )
 
     with pytest.raises(ValueError, match="Credential ID and Character ID"):
