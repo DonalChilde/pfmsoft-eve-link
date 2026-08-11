@@ -2,13 +2,9 @@
 
 import sys
 from typing import cast
-from warnings import deprecated
 
 import typer
-from rich.console import Console
 
-from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
-from pfmsoft.eve_link.schema.models import EsiSchema
 from pfmsoft.eve_link.settings import SETTINGS_KEY, EsiLinkSettings
 
 
