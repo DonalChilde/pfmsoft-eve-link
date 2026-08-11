@@ -1,14 +1,10 @@
 """Helpers for the CLI."""
 
 import sys
-from pathlib import Path
 from typing import cast
 from warnings import deprecated
 
 import typer
-from pfmsoft.api_request.settings import ApiRequestSettings
-from pfmsoft.eve_auth_manager.settings import EveAuthManagerSettings
-from pfmsoft.eve_snippets import save_text_file
 from rich.console import Console
 
 from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
