@@ -1,4 +1,4 @@
-"""Generate markdown documentation from serialized EsiSchema JSON."""
+"""Generate markdown documentation from a serialized EsiSchema JSON payload."""
 
 from pathlib import Path
 from typing import Annotated
@@ -8,21 +8,18 @@ from pfmsoft.eve_snippets import save_text_file
 from rich.console import Console
 from rich.markdown import Markdown
 
-from pfmsoft.eve_link.schema.cache.schema_cache_disk import SchemaCacheManager
+from pfmsoft.eve_link.cli.helpers import get_stdin
 from pfmsoft.eve_link.schema.models import EsiSchema
 from pfmsoft.eve_link.schema.schema_report import generate_esi_schema_markdown_report
-
-from ..helpers import get_eve_link_settings_from_context, get_schema, get_stdin
 
 app = typer.Typer(no_args_is_help=True)
 
 
 @app.command(
     name="generate-doc",
-    help="Generate operation-focused markdown documentation from serialized EsiSchema JSON input.",
+    help="Generate operation-focused markdown docs from an EsiSchema JSON file or stdin stream.",
 )
 def generate_schema_doc(
-    ctx: typer.Context,
     file_in: Annotated[
         Path | None,
         typer.Option(
@@ -31,15 +28,7 @@ def generate_schema_doc(
             dir_okay=False,
             readable=True,
             allow_dash=True,
-            help="Path to serialized EsiSchema JSON. Use - for stdin. Defaults to None, which will use the cached schema from --date.",
-        ),
-    ] = None,
-    compatibility_date: Annotated[
-        str | None,
-        typer.Option(
-            "--date",
-            show_default=True,
-            help="Compatibility date (YYYY-MM-DD) of cached ESI schema to use. Mutually exclusive with --file-in.",
+            help="Path to a serialized EsiSchema JSON file. Use - to read from stdin.",
         ),
     ] = None,
     file_out: Annotated[
@@ -73,7 +62,10 @@ def generate_schema_doc(
         ),
     ] = False,
 ) -> None:
-    """Generate markdown documentation from serialized EsiSchema JSON.
+    """Generate markdown documentation from a serialized EsiSchema JSON payload.
+
+    The input schema must already be a downloaded ESI schema document. Supply it via
+    --from path/to/schema.json or pipe it via stdin with --from -.
 
     The generated markdown includes version metadata, TOC grouped by tag, and a
     per-operation section that covers summary, parameters, request body, response schema,
@@ -83,36 +75,27 @@ def generate_schema_doc(
         messenger = Console(stderr=True, quiet=True)
     else:
         messenger = Console(stderr=True)
-    if file_in is not None and compatibility_date is not None:
+    if file_in is None:
         messenger.print(
-            "[red]Error: Cannot specify both --schema and --date options.[/red]"
+            "[red]Error: A schema source is required. Use --from <path> or --from - for stdin.[/red]"
         )
         raise typer.Exit(code=1)
-    # Get the EsiSchema from the input file or stdin
+
     if file_in == Path("-"):
-        input_data = get_stdin()
         try:
+            input_data = get_stdin()
             esi_schema = EsiSchema.deserialize(input_data)
         except Exception as e:
             messenger.print(
                 f"[red]Error: Failed to load schema from JSON input - {e}[/red]"
             )
             raise typer.Exit(code=1) from e
-    elif file_in is not None:
+    else:
         try:
             esi_schema = EsiSchema.deserialize(file_in.read_text(encoding="utf-8"))
         except Exception as e:
             messenger.print(f"[red]Error: Failed to read input file - {e}[/red]")
             raise typer.Exit(code=1) from e
-    else:
-        settings = get_eve_link_settings_from_context(ctx)
-        # if compatibility_date is None, get the most recent cached schema
-        manager = SchemaCacheManager(cache_directory=settings.schema_cache_directory)
-        esi_schema = get_schema(
-            messenger=messenger,
-            schema_manager=manager,
-            compatibility_date=compatibility_date,
-        )
 
     markdown_doc = generate_esi_schema_markdown_report(schema=esi_schema)
     if file_out == Path("-"):
