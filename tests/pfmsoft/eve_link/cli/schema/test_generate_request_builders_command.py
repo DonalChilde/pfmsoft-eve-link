@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 from typer.testing import CliRunner
 
-from pfmsoft.eve_link.cli.schema import generate_request_builders as command
+from pfmsoft.eve_link.cli.schema.util import generate_request_builders as command
 from pfmsoft.eve_link.request_builder import GeneratedPackage
 
 runner = CliRunner()

@@ -11,6 +11,7 @@ from pathlib import Path
 
 from httpx2 import Client
 from pfmsoft.eve_snippets.eve.eve_dates import previous_downtime
+from whenever import Instant
 
 from pfmsoft.eve_link.schema.helpers.fetch import (
     TimestampedCompatibilityDates,
@@ -41,11 +42,11 @@ class SchemaCacheEntry:
 
     Attributes:
         compatibility_date: Compatibility date for the schema in YYYY-MM-DD.
-        timestamp: Fetch timestamp in nanoseconds when available.
+        timestamp: Fetch timestamp as ISO 8601 string when available.
     """
 
     compatibility_date: str
-    timestamp: int | None
+    timestamp: str | None
 
 
 class SchemaCacheManager:
@@ -101,7 +102,7 @@ class SchemaCacheManager:
         if self._compatibility_dates is None:
             self._fetch_compatibility_dates(session=session)
             return
-        if self._compatibility_dates.timestamp_instant() < previous_downtime():
+        if self._compatibility_dates.timestamp_instant < previous_downtime():
             self._fetch_compatibility_dates(session=session)
 
     @property
@@ -190,7 +191,11 @@ class SchemaCacheManager:
             entries.append(
                 SchemaCacheEntry(
                     compatibility_date=parsed.compatibility_date,
-                    timestamp=parsed.timestamp,
+                    timestamp=(
+                        Instant.from_timestamp_nanos(parsed.timestamp).format_iso()
+                        if parsed.timestamp is not None
+                        else None
+                    ),
                 )
             )
 
@@ -199,7 +204,7 @@ class SchemaCacheManager:
             key=lambda item: (
                 item.compatibility_date,
                 item.timestamp is None,
-                item.timestamp if item.timestamp is not None else -1,
+                item.timestamp or "",
             ),
         )
 

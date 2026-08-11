@@ -36,7 +36,7 @@ def _write_schema_json(path: Path) -> None:
     }
     serialized = EsiSchema.from_raw_schema(
         raw_schema,
-        timestamp=1723290000000000000,
+        timestamp="2026-08-10T12:00:00Z",
     ).serialize()
     path.write_text(serialized, encoding="utf-8")
 

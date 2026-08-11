@@ -92,10 +92,10 @@ def _build_cache_entries(entries: list[SchemaCacheEntry]) -> str:
         rows=[
             [
                 entry.compatibility_date,
-                str(entry.timestamp) if entry.timestamp else "None",
-                Instant.from_timestamp_nanos(entry.timestamp).format_iso()
+                Instant.parse_iso(entry.timestamp).timestamp_nanos()
                 if entry.timestamp
                 else "None",
+                entry.timestamp if entry.timestamp else "None",
             ]
             for entry in entries
         ],

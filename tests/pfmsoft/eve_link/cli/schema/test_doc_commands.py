@@ -6,8 +6,8 @@ from types import SimpleNamespace
 import pytest
 from typer.testing import CliRunner
 
-from pfmsoft.eve_link.cli.schema import doc as doc_command
 from pfmsoft.eve_link.cli.schema.cache import doc as cache_doc_command
+from pfmsoft.eve_link.cli.schema.util import doc as doc_command
 
 runner = CliRunner()
 
@@ -111,6 +111,14 @@ def test_cache_doc_saves_directory_output_with_default_filename(
     assert saved["directory"] == output_dir
     assert saved["filename"] == "schema_docs_2026-06-09.md"
     assert "Markdown documentation saved to" in result.stderr
+
+
+def test_generate_doc_rejects_compatibility_date_option() -> None:
+    """The command should operate on the schema payload itself, not the cache."""
+    result = runner.invoke(doc_command.app, ["--date", "2026-06-09"])
+
+    assert result.exit_code == 2
+    assert "No such option: --date" in result.output
 
 
 def test_generate_doc_reports_invalid_stdin_schema(

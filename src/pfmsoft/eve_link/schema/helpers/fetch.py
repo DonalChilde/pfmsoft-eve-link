@@ -25,9 +25,9 @@ class TimestampedSchema:
     schema: dict[str, Any]
     """The downloaded schema data as a dictionary, typically representing the OpenAPI 
         schema fetched from the ESI API."""
-    timestamp: int
+    timestamp: str
     """The timestamp associated with the schema, representing the timestamp when the 
-        schema was fetched in nanoseconds."""
+        schema was fetched as an ISO 8601 string."""
 
     @classmethod
     def deserialize(cls, json_string: str) -> TimestampedSchema:
@@ -39,9 +39,10 @@ class TimestampedSchema:
         """Serialize the TimestampedSchema instance into a JSON string."""
         return TimestampedSchemaRoot(root=self).model_dump_json(indent=indent)
 
+    @property
     def timestamp_instant(self) -> Instant:
         """Return the timestamp as an Instant object."""
-        return Instant.from_timestamp_nanos(self.timestamp)
+        return Instant.parse_iso(self.timestamp)
 
 
 TimestampedSchemaRoot = RootModel[TimestampedSchema]
@@ -53,9 +54,9 @@ class TimestampedCompatibilityDates:
 
     compatibility_dates: tuple[str, ...]
     """The tuple of compatibility dates, typically fetched from the ESI API."""
-    timestamp: int
+    timestamp: str
     """The timestamp associated with the compatibility dates, representing the 
-        timestamp when the dates were fetched in nanoseconds."""
+        timestamp when the dates were fetched as an ISO 8601 string."""
 
     @classmethod
     def deserialize(cls, json_string: str) -> TimestampedCompatibilityDates:
@@ -69,9 +70,10 @@ class TimestampedCompatibilityDates:
             indent=indent
         )
 
+    @property
     def timestamp_instant(self) -> Instant:
         """Return the timestamp as an Instant object."""
-        return Instant.from_timestamp_nanos(self.timestamp)
+        return Instant.parse_iso(self.timestamp)
 
 
 TimestampedCompatibilityDatesRoot = RootModel[TimestampedCompatibilityDates]
@@ -110,9 +112,11 @@ def fetch_schema(
         response = session.get(url, params=params)
         response.raise_for_status()
         schema_data = response.json()
-        timestamp = Instant.now().timestamp_nanos()
+        timestamp = (
+            Instant.now().format_iso()
+        )  # Get the current timestamp in ISO 8601 format
         logger.info(
-            "Fetched schema for date %s with timestamp %d",
+            "Fetched schema for date %s with timestamp %s",
             schema_as_of,
             timestamp,
         )
@@ -155,7 +159,7 @@ def fetch_compatibility_dates(session: Client) -> TimestampedCompatibilityDates:
                 ) from e
         return TimestampedCompatibilityDates(
             compatibility_dates=tuple(dates["compatibility_dates"]),
-            timestamp=Instant.now().timestamp_nanos(),
+            timestamp=Instant.now().format_iso(),
         )
     except Exception as e:
         logger.error("Error fetching compatibility dates: %s", e)
