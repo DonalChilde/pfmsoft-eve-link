@@ -22,6 +22,7 @@ from pfmsoft.eve_link.esi_request.models import (
 )
 from pfmsoft.eve_link.esi_request.validate import EsiRequestValidationErrors
 from pfmsoft.eve_link.schema.models import EsiSchema
+from pfmsoft.eve_link.settings import get_settings
 
 
 class _FakeApiRequester:
@@ -192,6 +193,23 @@ def test_context_manager_initializes_and_closes_dependencies(
     assert fake_requester.exited_with == (None, None, None)
     assert fake_auth_manager.entered is True
     assert fake_auth_manager.exited_with == (None, None, None)
+
+
+def test_from_settings_builds_link_with_runtime_configuration(tmp_path: Path) -> None:
+    """Construct an EsiLink from settings without initializing backend resources."""
+    settings = get_settings(application_directory=tmp_path / "app")
+
+    link = EsiLink.from_settings(settings)
+
+    assert isinstance(link, EsiLink)
+    assert link.auth_manager_db_path == (
+        settings.eve_auth_manager_settings.authorization_database_path
+    )
+    assert link.web_cache_path == settings.api_request_settings.web_cache_path
+    assert link.max_rate == settings.max_rate
+    assert link.time_period == settings.time_period
+    assert link.api_requester is None
+    assert link.auth_manager is None
 
 
 def test_initialization_guards_and_operation_lookup() -> None:
