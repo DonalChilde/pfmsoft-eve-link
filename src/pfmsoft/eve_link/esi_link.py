@@ -98,6 +98,23 @@ class EsiLink:
         if self.auth_manager is not None:
             self.auth_manager.__exit__(exc_type, exc_value, traceback)
 
+    @classmethod
+    def from_settings(cls, settings: EsiLinkSettings) -> Self:
+        """Create an EsiLink instance from EsiLinkSettings.
+
+        Args:
+            settings: EsiLinkSettings object containing configuration parameters.
+
+        Returns:
+            EsiLink: An initialized EsiLink instance.
+        """
+        return cls(
+            auth_manager_db_path=settings.eve_auth_manager_settings.authorization_database_path,
+            web_cache_path=settings.api_request_settings.web_cache_path,
+            max_rate=settings.max_rate,
+            time_period=settings.time_period,
+        )
+
     def _check_api_requester_initialized(self) -> api_request.ApiRequester:
         """Return initialized ApiRequester instance.
 
