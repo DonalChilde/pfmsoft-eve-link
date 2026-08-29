@@ -1,24 +1,24 @@
 [project]
 name = "pfmsoft-eve-link"
-version = "0.4.8"
+version = "0.4.9"
 description = "A command line first interface to the Eve Online ESI API"
 readme = "README.md"
 authors = [{ name = "Chad Lowe", email = "pfmsoft.dev@gmail.com" }]
 requires-python = ">=3.14"
 dependencies = [
-    "httpx2>=2.5.0",
+    "httpx2>=2.12.0",
     "jinja2>=3.1.6",
     "mdformat>=1.0.0",
     "mdformat-gfm>=1.0.0",
-    "pfmsoft-api-request>=0.1.8",
+    "pfmsoft-api-request>=0.1.9",
     "pfmsoft-eve-auth-manager>=0.4.5",
     "pfmsoft-eve-snippets>=0.1.8",
     "pydantic>=2.13.4",
-    "pydantic-settings>=2.14.2",
+    "pydantic-settings>=2.15.0",
     "pyyaml>=6.0.3",
     "rich>=15.0.0",
-    "typer>=0.26.8",
-    "whenever>=0.10.2",
+    "typer>=0.27.1",
+    "whenever>=0.10.5",
 ]
 # https://packaging.python.org/en/latest/specifications/license-expression/#specification
 license = "MIT"
