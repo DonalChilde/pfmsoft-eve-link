@@ -458,7 +458,7 @@ wheels = [
 
 [[package]]
 name = "pfmsoft-api-request"
-version = "0.1.8"
+version = "0.1.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiolimiter" },
@@ -469,9 +469,9 @@ dependencies = [
     { name = "typer" },
     { name = "whenever" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/77/23/dbe591a58f67a472307d51f3f0b1eeef53f9a3cbd7e4219f933fb01f1ac0/pfmsoft_api_request-0.1.8.tar.gz", hash = "sha256:5e1f19d0645a23fc5dfb140881758993161b97f3eb9c2859dcf6aabd0b82b4f8", size = 30904, upload-time = "2026-08-29T21:32:17.721Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/f6/719ebc96c282e3eecafb87cccd7e4d510902c1fe9681a8649f6cda48ef71/pfmsoft_api_request-0.1.9.tar.gz", hash = "sha256:eb2f35c81080e587b52f161a5a139d93e8fa3f63c7de30fea5d390703cbb9a45", size = 30936, upload-time = "2026-08-29T23:29:20.849Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/55/e3/e18458cf62d0ff980ffa286f28b90392c713e8ed3a38d2d76811dbf3661e/pfmsoft_api_request-0.1.8-py3-none-any.whl", hash = "sha256:7dc414e7ed38e082d037f7af0b0291015a02edbbb808d3fcc3b3375f4c0a2577", size = 45962, upload-time = "2026-08-29T21:32:16.552Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/6d/310e7d3eb75df4939ef083e5db30b3adaa4a33428eae3036969a100103ed/pfmsoft_api_request-0.1.9-py3-none-any.whl", hash = "sha256:5e91894dc8ea7f3d31911296931b7befa799c41e01dba25a69ba53964aa8d6cb", size = 45992, upload-time = "2026-08-29T23:29:19.624Z" },
 ]
 
 [[package]]
@@ -527,7 +527,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "httpx2", specifier = ">=2.5.0" },
+    { name = "httpx2", specifier = ">=2.12.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "mdformat", specifier = ">=1.0.0" },
     { name = "mdformat-gfm", specifier = ">=1.0.0" },
@@ -535,11 +535,11 @@ requires-dist = [
     { name = "pfmsoft-eve-auth-manager", specifier = ">=0.4.5" },
     { name = "pfmsoft-eve-snippets", specifier = ">=0.1.8" },
     { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "pydantic-settings", specifier = ">=2.14.2" },
+    { name = "pydantic-settings", specifier = ">=2.15.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "rich", specifier = ">=15.0.0" },
-    { name = "typer", specifier = ">=0.26.8" },
-    { name = "whenever", specifier = ">=0.10.2" },
+    { name = "typer", specifier = ">=0.27.1" },
+    { name = "whenever", specifier = ">=0.10.5" },
 ]
 
 [package.metadata.requires-dev]
