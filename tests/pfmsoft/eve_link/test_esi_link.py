@@ -123,6 +123,7 @@ def _make_request_response(*, request_id):
             url=request.url,
             elapsed=1,
             bytes_downloaded=10,
+            received_at="2026-08-29T00:00:00Z",
         ),
         json={"status": "ok"},
         request=request,
