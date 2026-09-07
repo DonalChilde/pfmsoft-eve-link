@@ -184,7 +184,9 @@ class EsiLink:
             raise ValueError(
                 "Credential ID and Character ID must be provided for authorized requests."
             )
-        access_token = auth_manager.get_character(cred_id, character_id).access_token
+        access_token = auth_manager.refresh_character(
+            cred_id, character_id
+        ).access_token
         runtime_esi_request.access_token = access_token
 
     async def make_request(
