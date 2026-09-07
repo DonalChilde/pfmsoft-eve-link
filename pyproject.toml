@@ -11,13 +11,13 @@ dependencies = [
     "mdformat>=1.0.0",
     "mdformat-gfm>=1.0.0",
     "pfmsoft-api-request>=0.1.9",
-    "pfmsoft-eve-auth-manager>=0.4.5",
+    "pfmsoft-eve-auth-manager>=0.4.6",
     "pfmsoft-eve-snippets>=0.1.8",
-    "pydantic>=2.13.4",
+    "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
     "pyyaml>=6.0.3",
     "rich>=15.0.0",
-    "typer>=0.27.1",
+    "typer>=0.27.2",
     "whenever>=0.10.5",
 ]
 # https://packaging.python.org/en/latest/specifications/license-expression/#specification
@@ -78,9 +78,9 @@ docstring-code-line-length = 88
 
 [dependency-groups]
 dev = [
-    "mkdocstrings-python>=2.0.5",
+    "mkdocstrings-python>=2.0.7",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
-    "ruff>=0.15.21",
-    "zensical>=0.0.50",
+    "ruff>=0.16.5",
+    "zensical>=0.0.57",
 ]
